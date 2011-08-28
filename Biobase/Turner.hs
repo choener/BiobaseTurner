@@ -8,6 +8,7 @@
 
 module Biobase.Turner where
 
+import Data.ByteString
 import Data.Map as M
 
 import Biobase.Primary
@@ -15,7 +16,9 @@ import Biobase.Secondary
 import Data.PrimitiveArray
 import Data.PrimitiveArray.Ix
 
--- | The parameters.
+-- | The parameters. Turner parameters are set by the Import module for
+-- nucleotides n,a,c,g,u. All values that are not read (or are ".") will end up
+-- with a value > 100K.
 --
 -- [1] Yes, such instances are easily created, but I don't want to pull in
 -- another library and I don't want to create an Ix instance here.
@@ -26,7 +29,7 @@ data Turner2004 = Turner2004
   , dangle5 :: PrimArray PN Double
   , hairpinL :: PrimArray Int Double
   , hairpinMM :: PrimArray PNN Double
-  , hairpinLookup :: M.Map [Nuc] Double
+  , hairpinLookup :: M.Map ByteString Double
   , hairpinGGG :: Double
   , hairpinCslope :: Double
   , hairpinCintercept :: Double
