@@ -22,6 +22,8 @@ import Data.PrimitiveArray.Ix
 --
 -- [1] Yes, such instances are easily created, but I don't want to pull in
 -- another library and I don't want to create an Ix instance here.
+--
+-- TODO use 'Energy' instead of 'Double'
 
 data Turner2004 = Turner2004
   { stack :: PrimArray (Pair,Pair) Double
@@ -36,8 +38,8 @@ data Turner2004 = Turner2004
   , hairpinC3 :: Double
   , bulgeL :: PrimArray Int Double
   , bulgeSingleC :: Double
-  , iloop1x1 :: PrimArray (Pair,Pair,Nuc,Nuc) Double
-  , iloop1x2 :: PrimArray (Pair,Pair,Nuc,Nuc,Nuc) Double
+  , iloop1x1 :: PrimArray (Pair,Pair,(Nuc,Nuc)) Double
+  , iloop2x1 :: PrimArray (Pair,Pair,(Nuc,Nuc,Nuc)) Double
   , iloop2x2 :: PrimArray (Pair,Pair,(Nuc,Nuc,Nuc,Nuc)) Double -- yeah, 6-tuple ix instances :-( [1]
   , iloopMM :: PrimArray PNN Double
   , iloop2x3MM :: PrimArray PNN Double
@@ -52,9 +54,9 @@ data Turner2004 = Turner2004
   , multiAsym :: Double
   , multiStrain :: Double
   , extMM :: PrimArray PNN Double
-  , coaxStack :: PrimArray (Pair,Pair) Double
-  , coaxStackOpen :: PrimArray PNN Double
-  , coaxStackCont :: PrimArray PNN Double
+  , coaxial :: PrimArray (Pair,Pair) Double -- no intervening unpaired nucleotides
+  , coaxStack :: PrimArray PNN Double
+  , tStackCoax :: PrimArray PNN Double
   , largeLoop :: Double
   , termAU :: Double
   , intermolecularInit :: Double
