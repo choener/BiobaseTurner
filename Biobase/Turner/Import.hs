@@ -97,7 +97,7 @@ fromDir fp prefix suffix = do
     , bulgeSingleC  = L.head $ imisc' !! 13
     , iloop1x1      = fromAssocs minPPBB   maxPPBB   infE $ L.zip keysPPBB   iloop1x1'
     , iloop2x1      = fromAssocs minPPBBB  maxPPBBB  infE $ L.zip keysPPBBB  iloop2x1'
-    , iloop2x2      = fromAssocs minPPBBBB maxPPBBBB infE $ L.zip keysPPBBBB iloop2x2'
+    , iloop2x2      = fromAssocs minPPBBBB maxPPBBBB infE $ L.zip (if (prefix == "" || suffix == "dh") then keysPPBBBBrna else keysPPBBBBdna) iloop2x2'
     , iloopMM       = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloopMM'
     , iloop2x3MM    = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloop2x3MM'
     , iloop1xnMM    = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloop1xnMM'
@@ -142,11 +142,14 @@ keysPPBB   = [ ((k1,k2),(k4,k3),(k5,k6))
              | (k1,k2) <- plist11, k5 <- acgu, (k3,k4) <- plist11, k6 <- acgu]
 keysPPBBB  = [ ((k1,k2),(k4,k3),(k5,k6,k7))
              | (k1,k2) <- plist11, k6 <- acgu, k5 <- acgu, (k3,k4) <- plist11, k7 <- acgu]
-keysPPBBBB = [ ((k1,k2),(k4,k3),(k5,k6,k7,k8))
-             | (k1,k2) <- plist22, (k3,k4) <- plist22, k5 <- acgu, k8 <- acgu, k6 <- acgu, k7 <- acgu]
+keysPPBBBBrna = [ ((k1,k2),(k4,k3),(k5,k6,k7,k8))
+                | (k1,k2) <- plist22rna, (k3,k4) <- plist22rna, k5 <- acgu, k8 <- acgu, k6 <- acgu, k7 <- acgu]
+keysPPBBBBdna = [ ((k1,k2),(k4,k3),(k5,k6,k7,k8))
+                | (k1,k2) <- plist22dna, (k3,k4) <- plist22dna, k5 <- acgu, k8 <- acgu, k6 <- acgu, k7 <- acgu]
 
 plist11 = [(nA,nU),(nC,nG),(nG,nC),(nU,nA),(nG,nU),(nU,nG)]
-plist22 = [(nA,nU),(nC,nG),(nG,nC),(nG,nU),(nU,nA),(nU,nG)]
+plist22rna = [(nA,nU),(nC,nG),(nG,nC),(nG,nU),(nU,nA),(nU,nG)]
+plist22dna = [(nA,nT),(nC,nG),(nG,nC),(nT,nA),(nG,nT),(nT,nG)]
 
 infE = 999999 :: Double
 
