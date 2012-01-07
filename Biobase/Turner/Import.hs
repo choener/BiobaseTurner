@@ -1,3 +1,5 @@
+{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -46,6 +48,7 @@ import Data.Map as M
 import qualified Data.List as L
 import System.FilePath.Posix
 import Data.Maybe (fromJust)
+import Data.Array.Repa.Index
 
 import Biobase.Primary
 import Biobase.Secondary
@@ -83,17 +86,17 @@ fromDir fp prefix suffix = do
   cstack'     <- blockFromFile $ fp </> prefix ++ "coaxstack" <.> suffix
   tstack'     <- blockFromFile $ fp </> prefix ++ "tstackcoax" <.> suffix
   return Turner2004
-    { stack         = fromAssocs minPP  maxPP  infE $ L.zip keysPP  stack'
-    , dangle3       = fromAssocs minPB  maxPB  infE $ L.zip keysPB  dangle3'
-    , dangle5       = fromAssocs minPB  maxPB  infE $ L.zip keysPB  dangle5'
-    , hairpinL      = fromAssocs 0      30     infE $ L.zip [1..30] hairpinL'
+    { stack         = fromAssocs minPP  maxPP   infE $ L.zip keysPP  stack'
+    , dangle3       = fromAssocs minPB  maxPB   infE $ L.zip keysPB  dangle3'
+    , dangle5       = fromAssocs minPB  maxPB   infE $ L.zip keysPB  dangle5'
+    , hairpinL      = fromAssocs (Z:.0) (Z:.30) infE $ L.zip d1_30 hairpinL'
     , hairpinMM     = fromAssocs minPBB maxPBB infE $ L.zip keysPBB hairpinMM'
     , hairpinLookup = M.fromList $ hairpinLk3 ++ hairpinLk4 ++ hairpinLk6
     , hairpinGGG    = L.head $ imisc' !! 8
     , hairpinCslope = L.head $ imisc' !! 9
     , hairpinCintercept = L.head $ imisc' !! 10
     , hairpinC3     = L.head $ imisc' !! 11
-    , bulgeL        = fromAssocs 0      30     infE $ L.zip [1..30] bulgeL'
+    , bulgeL        = fromAssocs (Z:.0)      (Z:.30)     infE $ L.zip d1_30 bulgeL'
     , bulgeSingleC  = L.head $ imisc' !! 13
     , iloop1x1      = fromAssocs minPPBB   maxPPBB   infE $ L.zip keysPPBB   iloop1x1'
     , iloop2x1      = fromAssocs minPPBBB  maxPPBBB  infE $ L.zip keysPPBBB  iloop2x1'
@@ -101,7 +104,7 @@ fromDir fp prefix suffix = do
     , iloopMM       = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloopMM'
     , iloop2x3MM    = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloop2x3MM'
     , iloop1xnMM    = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloop1xnMM'
-    , iloopL        = fromAssocs 0      30     infE $ L.zip [1..30] iloopL'
+    , iloopL        = fromAssocs (Z:.0)    (Z:.30)   infE $ L.zip d1_30      iloopL'
     , multiMM       = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    multiMM'
     , ninio = L.head $ imisc' !! 2
     , maxNinio = L.head $ imisc' !! 1
@@ -119,32 +122,34 @@ fromDir fp prefix suffix = do
     , intermolecularInit = L.head $ imisc' !! 12
     }
 
-minPP     = (minP,minP)
-maxPP     = (maxP,maxP)
-minP      = (nN,nN)
-maxP      = (nU,nU)
-minPB     = (minP,nN)
-maxPB     = (maxP,nU)
-minPBB    = (minP,nN,nN)
-maxPBB    = (maxP,nU,nU)
-minPPBB   = (minP,minP,(nN,nN))
-maxPPBB   = (maxP,maxP,(nU,nU))
-minPPBBB  = (minP,minP,(nN,nN,nN))
-maxPPBBB  = (maxP,maxP,(nU,nU,nU))
-minPPBBBB = (minP,minP,(nN,nN,nN,nN))
-maxPPBBBB = (maxP,maxP,(nU,nU,nU,nU))
+minPP     = Z:.nN:.nN:.nN:.nN -- (minP,minP)
+maxPP     = Z:.nU:.nU:.nU:.nU -- (maxP,maxP)
+minP      = Z:.nN:.nN -- (nN,nN)
+maxP      = Z:.nU:.nU -- (nU,nU)
+minPB     = minP:.nN -- (minP,nN)
+maxPB     = maxP:.nU -- (maxP,nU)
+minPBB    = minPB:.nN -- (minP,nN,nN)
+maxPBB    = maxPB:.nU -- (maxP,nU,nU)
+minPPBB   = minPP:.nN:.nN -- (minP,minP,(nN,nN))
+maxPPBB   = maxPP:.nU:.nU -- (maxP,maxP,(nU,nU))
+minPPBBB  = minPPBB:.nN -- (minP,minP,(nN,nN,nN))
+maxPPBBB  = maxPPBB:.nU -- (maxP,maxP,(nU,nU,nU))
+minPPBBBB = minPPBBB:.nN -- (minP,minP,(nN,nN,nN,nN))
+maxPPBBBB = maxPPBBB:.nU -- (maxP,maxP,(nU,nU,nU,nU))
 
-keysPP     = [((k1,k2),(k4,k3)) | k1 <- acgu, k3 <- acgu, k2 <- acgu, k4 <- acgu]
-keysPB     = [((k1,k2),k3) | k1 <- acgu, k2 <- acgu, k3 <- acgu]
-keysPBB    = [ ((k1,k2),k3,k4)
+d1_30 = L.map (Z:.) [1..30]
+
+keysPP     = [{- ((k1,k2),(k4,k3)) -} Z:.k1:.k2:.k4:.k3 | k1 <- acgu, k3 <- acgu, k2 <- acgu, k4 <- acgu]
+keysPB     = [{- ((k1,k2),k3) -} Z:.k1:.k2:.k3 | k1 <- acgu, k2 <- acgu, k3 <- acgu]
+keysPBB    = [ {- ((k1,k2),k3,k4) -} Z:.k1:.k2:.k3:.k4
              | k1 <- acgu, k3 <- acgu, k2 <- acgu, k4 <- acgu]
-keysPPBB   = [ ((k1,k2),(k4,k3),(k5,k6))
+keysPPBB   = [ {- ((k1,k2),(k4,k3),(k5,k6)) -} Z:.k1:.k2:.k4:.k3:.k5:.k6
              | (k1,k2) <- plist11, k5 <- acgu, (k3,k4) <- plist11, k6 <- acgu]
-keysPPBBB  = [ ((k1,k2),(k4,k3),(k5,k6,k7))
+keysPPBBB  = [ {- ((k1,k2),(k4,k3),(k5,k6,k7)) -} Z:.k1:.k2:.k4:.k3:.k5:.k6:.k7
              | (k1,k2) <- plist11, k6 <- acgu, k5 <- acgu, (k3,k4) <- plist11, k7 <- acgu]
-keysPPBBBBrna = [ ((k1,k2),(k4,k3),(k5,k6,k7,k8))
+keysPPBBBBrna = [ {- ((k1,k2),(k4,k3),(k5,k6,k7,k8)) -} Z:.k1:.k2:.k4:.k3:.k5:.k6:.k7:.k8
                 | (k1,k2) <- plist22rna, (k3,k4) <- plist22rna, k5 <- acgu, k8 <- acgu, k6 <- acgu, k7 <- acgu]
-keysPPBBBBdna = [ ((k1,k2),(k4,k3),(k5,k6,k7,k8))
+keysPPBBBBdna = [ {- ((k1,k2),(k4,k3),(k5,k6,k7,k8)) -} Z:.k1:.k2:.k4:.k3:.k5:.k6:.k7:.k8
                 | (k1,k2) <- plist22dna, (k3,k4) <- plist22dna, k5 <- acgu, k8 <- acgu, k6 <- acgu, k7 <- acgu]
 
 plist11 = [(nA,nU),(nC,nG),(nG,nC),(nU,nA),(nG,nU),(nU,nG)]
