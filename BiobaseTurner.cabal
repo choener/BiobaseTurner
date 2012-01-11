@@ -43,12 +43,16 @@ library
     BiobaseXNA >= 0.6.0.0,
     vector >= 0.9,
     repa >= 2.0,
-    PrimitiveArray >= 0.1.0.0
+    PrimitiveArray >= 0.1.1.2
 
   exposed-modules:
     Biobase.Turner
     Biobase.Turner.Import
 
   ghc-options:
-    -O2
+    -Odph -funbox-strict-fields -fspec-constr
+
+source-repository head
+  type: git
+  location: git://github.com/choener/BiobaseTurner
 
