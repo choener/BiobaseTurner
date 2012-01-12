@@ -16,7 +16,7 @@ import Data.Array.Repa.Index
 import Biobase.Primary
 import Biobase.Secondary
 import Data.PrimitiveArray
-import Data.PrimitiveArray.Unboxed
+import Data.PrimitiveArray.Unboxed.Zero
 
 -- | The parameters. Turner parameters are set by the Import module for
 -- nucleotides n,a,c,g,u. All values that are not read (or are ".") will end up
