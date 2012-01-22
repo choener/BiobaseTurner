@@ -34,26 +34,26 @@ type PPNNN = PPNN:.Nuc
 type PPNNNN = PPNNN:.Nuc
 
 data Turner2004 = Turner2004
-  { stack :: PrimArray PP Double
-  , dangle3 :: PrimArray PN Double
-  , dangle5 :: PrimArray PN Double
-  , hairpinL :: PrimArray DIM1 Double
-  , hairpinMM :: PrimArray PNN Double
+  { stack :: Arr0 PP Double
+  , dangle3 :: Arr0 PN Double
+  , dangle5 :: Arr0 PN Double
+  , hairpinL :: Arr0 DIM1 Double
+  , hairpinMM :: Arr0 PNN Double
   , hairpinLookup :: M.Map ByteString Double
   , hairpinGGG :: Double
   , hairpinCslope :: Double
   , hairpinCintercept :: Double
   , hairpinC3 :: Double
-  , bulgeL :: PrimArray DIM1 Double
+  , bulgeL :: Arr0 DIM1 Double
   , bulgeSingleC :: Double
-  , iloop1x1 :: PrimArray PPNN Double
-  , iloop2x1 :: PrimArray PPNNN Double
-  , iloop2x2 :: PrimArray PPNNNN Double
-  , iloopMM :: PrimArray PNN Double
-  , iloop2x3MM :: PrimArray PNN Double
-  , iloop1xnMM :: PrimArray PNN Double
-  , iloopL :: PrimArray DIM1 Double
-  , multiMM :: PrimArray PNN Double
+  , iloop1x1 :: Arr0 PPNN Double
+  , iloop2x1 :: Arr0 PPNNN Double
+  , iloop2x2 :: Arr0 PPNNNN Double
+  , iloopMM :: Arr0 PNN Double
+  , iloop2x3MM :: Arr0 PNN Double
+  , iloop1xnMM :: Arr0 PNN Double
+  , iloopL :: Arr0 DIM1 Double
+  , multiMM :: Arr0 PNN Double
   , ninio :: Double
   , maxNinio :: Double
   , multiOffset :: Double
@@ -61,12 +61,12 @@ data Turner2004 = Turner2004
   , multiHelix :: Double
   , multiAsym :: Double
   , multiStrain :: Double
-  , extMM :: PrimArray PNN Double
-  , coaxial :: PrimArray PP Double -- no intervening unpaired nucleotides
-  , coaxStack :: PrimArray PNN Double
-  , tStackCoax :: PrimArray PNN Double
+  , extMM :: Arr0 PNN Double
+  , coaxial :: Arr0 PP Double -- no intervening unpaired nucleotides
+  , coaxStack :: Arr0 PNN Double
+  , tStackCoax :: Arr0 PNN Double
   , largeLoop :: Double
   , termAU :: Double
   , intermolecularInit :: Double
-  } deriving (Show)
+  } deriving ()
 
