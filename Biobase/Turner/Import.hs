@@ -37,6 +37,7 @@
 module Biobase.Turner.Import where
 
 import Control.Arrow
+import Data.Array.Repa.Index
 import Data.ByteString.Char8 as BS
 import Data.ByteString.Lex.Double
 import Data.Char
@@ -45,10 +46,9 @@ import Data.Iteratee.Char as I
 import Data.Iteratee.IO as I
 import Data.List.Split
 import Data.Map as M
+import Data.Maybe (fromJust)
 import qualified Data.List as L
 import System.FilePath.Posix
-import Data.Maybe (fromJust)
-import Data.Array.Repa.Index
 
 import Biobase.Primary
 import Biobase.Secondary
@@ -233,18 +233,13 @@ readD xs
 miscFromFile :: FilePath -> IO [[Double]]
 miscFromFile fp = run =<< enumFile 8192 fp iMiscLoop
 
--- | 
+-- |
 
 tabFromFile :: FilePath -> IO [(ByteString,Double)]
 tabFromFile fp = run =<< enumFile 8192 fp iTabulated
 
 allEq [] = True
 allEq (x:xs) = L.all (==x) xs
-
-{-
-test1 = blockFromFile "/home/choener/Documents/Workdata/TurnerRNA2004/RNA/loop.dat"
-test2 = fromDir "/home/choener/Documents/Workdata/TurnerRNA2004/RNA" "" ".dat"
--}
 
 type Prefix = FilePath
 type Suffix = FilePath

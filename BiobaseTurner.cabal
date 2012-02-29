@@ -40,9 +40,9 @@ library
     filepath,
     iteratee,
     split,
-    BiobaseXNA >= 0.6.2.0,
-    vector >= 0.9,
-    PrimitiveArray >= 0.2.0.0
+    vector         == 0.9.*   ,
+    BiobaseXNA     == 0.6.2.0 ,
+    PrimitiveArray == 0.2.0.0
 
   exposed-modules:
     Biobase.Turner
