@@ -42,7 +42,6 @@ library
     split,
     BiobaseXNA >= 0.6.2.0,
     vector >= 0.9,
-    repa >= 2.0,
     PrimitiveArray >= 0.2.0.0
 
   exposed-modules:
