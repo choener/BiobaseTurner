@@ -1,5 +1,5 @@
 name:           BiobaseTurner
-version:        0.2.2.0
+version:        0.2.2.1
 author:         Christian Hoener zu Siederdissen
 maintainer:     choener@tbi.univie.ac.at
 homepage:       http://www.tbi.univie.ac.at/~choener/
@@ -41,8 +41,8 @@ library
     iteratee,
     split,
     vector         == 0.9.*   ,
-    BiobaseXNA     == 0.6.2.0 ,
-    PrimitiveArray == 0.2.0.0
+    BiobaseXNA     == 0.6.2.1 ,
+    PrimitiveArray == 0.2.1.0
 
   exposed-modules:
     Biobase.Turner
