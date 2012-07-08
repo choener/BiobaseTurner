@@ -1,5 +1,5 @@
 name:           BiobaseTurner
-version:        0.2.2.3
+version:        0.2.2.4
 author:         Christian Hoener zu Siederdissen
 maintainer:     choener@tbi.univie.ac.at
 homepage:       http://www.tbi.univie.ac.at/~choener/
@@ -31,6 +31,8 @@ description:
                 representations. (with a good reason coming soon). For now,
                 just assume that this has performance benefits.
 
+
+
 library
   build-depends:
     base >3 && <5,
@@ -41,15 +43,17 @@ library
     iteratee       >= 0.8.8,
     split          >= 0.1.4,
     vector         == 0.9.*   ,
-    BiobaseXNA     == 0.6.2.4 ,
-    PrimitiveArray == 0.2.1.1
+    BiobaseXNA     == 0.6.2.5 ,
+    PrimitiveArray == 0.2.2.0
 
   exposed-modules:
     Biobase.Turner
     Biobase.Turner.Import
 
   ghc-options:
-    -Odph -funbox-strict-fields -fspec-constr
+    -O2 -funbox-strict-fields
+
+
 
 source-repository head
   type: git
