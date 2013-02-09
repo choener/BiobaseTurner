@@ -1,9 +1,9 @@
 name:           BiobaseTurner
-version:        0.2.2.4
+version:        0.3.0.0
 author:         Christian Hoener zu Siederdissen
 maintainer:     choener@tbi.univie.ac.at
 homepage:       http://www.tbi.univie.ac.at/~choener/
-copyright:      Christian Hoener zu Siederdissen, 2010-2012
+copyright:      Christian Hoener zu Siederdissen, 2010-2013
 category:       Bioinformatics
 synopsis:       Import Turner RNA parameters
 license:        GPL-3
@@ -19,32 +19,31 @@ description:
                 The file structure is geared towards humans, not machines. If
                 you need to be able to export, send a mail.
                 .
-                This is the 2011 post-library split version, hence not
-                deprecated anymore.
-                .
                 NOTE This is rather fragile as some files use different index
-                enumerations, which we handle rather... simplistically. We
-                cannot fix one asymmetry case in dnastack.dh, as we do not
-                change sources.
+                enumerations, which we handle rather... simplistically.
                 .
-                BIG FAT WARNING indexing now depends on repa shapes and index
-                representations. (with a good reason coming soon). For now,
-                just assume that this has performance benefits.
+                In principle, all parameters should be symmetric regarding the
+                stem direction. However, there is one asymmetry case in
+                dnastack.dh. We do not fix this problem as we do not change the
+                source files.
 
 
 
 library
   build-depends:
     base >3 && <5,
-    bytestring        >= 0.9,
-    bytestring-lexing >= 0.4,
-    containers     >= 0.4,
-    filepath       >= 1,
-    iteratee       >= 0.8.8,
-    split          >= 0.1.4,
-    vector         == 0.9.*   ,
-    BiobaseXNA     == 0.6.2.5 ,
-    PrimitiveArray == 0.2.2.0
+    bytestring        >= 0.9  ,
+    bytestring-lexing >= 0.4  ,
+    conduit           >= 0.5  ,
+    containers        >= 0.4  ,
+    filepath          >= 1    ,
+    lens              >= 3.8  ,
+    primitive         >= 0.5  ,
+    repa              >= 3.2  ,
+    split             >= 0.2  ,
+    vector            >= 0.10 ,
+    BiobaseXNA        >= 0.7  ,
+    PrimitiveArray    >= 0.5
 
   exposed-modules:
     Biobase.Turner
