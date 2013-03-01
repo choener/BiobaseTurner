@@ -55,40 +55,40 @@ type Turner2004 = Turner2004Model Energy
 -- and the actual element type 'e'.
 
 data Turner2004Model e = Turner2004Model
-  { _stack              :: U PP e
-  , _dangle3            :: U PN e
-  , _dangle5            :: U PN e
-  , _hairpinL           :: U DIM1 e
-  , _hairpinMM          :: U PNN e
-  , _hairpinLookup      :: M.Map ByteString e
-  , _hairpinGGG         :: e
-  , _hairpinCslope      :: e
-  , _hairpinCintercept  :: e
-  , _hairpinC3          :: e
-  , _bulgeL             :: U DIM1 e
-  , _bulgeSingleC       :: e
-  , _iloop1x1           :: U PPNN e
-  , _iloop2x1           :: U PPNNN e
-  , _iloop2x2           :: U PPNNNN e
-  , _iloopMM            :: U PNN e
-  , _iloop2x3MM         :: U PNN e
-  , _iloop1xnMM         :: U PNN e
-  , _iloopL             :: U DIM1 e
-  , _multiMM            :: U PNN e
-  , _ninio              :: e
-  , _maxNinio           :: e
-  , _multiOffset        :: e
-  , _multiNuc           :: e
-  , _multiHelix         :: e
-  , _multiAsym          :: e
-  , _multiStrain        :: e
-  , _extMM              :: U PNN e
-  , _coaxial            :: U PP e -- no intervening unpaired nucleotides
-  , _coaxStack          :: U PNN e
-  , _tStackCoax         :: U PNN e
-  , _largeLoop          :: e
-  , _termAU             :: e
-  , _intermolecularInit :: e
+  { _stack              :: !(U PP e)
+  , _dangle3            :: !(U PN e)
+  , _dangle5            :: !(U PN e)
+  , _hairpinL           :: !(U DIM1 e)
+  , _hairpinMM          :: !(U PNN e)
+  , _hairpinLookup      :: !(M.Map ByteString e)
+  , _hairpinGGG         :: !e
+  , _hairpinCslope      :: !e
+  , _hairpinCintercept  :: !e
+  , _hairpinC3          :: !e
+  , _bulgeL             :: !(U DIM1 e)
+  , _bulgeSingleC       :: !e
+  , _iloop1x1           :: !(U PPNN e)
+  , _iloop2x1           :: !(U PPNNN e)
+  , _iloop2x2           :: !(U PPNNNN e)
+  , _iloopMM            :: !(U PNN e)
+  , _iloop2x3MM         :: !(U PNN e)
+  , _iloop1xnMM         :: !(U PNN e)
+  , _iloopL             :: !(U DIM1 e)
+  , _multiMM            :: !(U PNN e)
+  , _ninio              :: !e
+  , _maxNinio           :: !e
+  , _multiOffset        :: !e
+  , _multiNuc           :: !e
+  , _multiHelix         :: !e
+  , _multiAsym          :: !e
+  , _multiStrain        :: !e
+  , _extMM              :: !(U PNN e)
+  , _coaxial            :: !(U PP e) -- no intervening unpaired nucleotides
+  , _coaxStack          :: !(U PNN e)
+  , _tStackCoax         :: !(U PNN e)
+  , _largeLoop          :: !e
+  , _termAU             :: !e
+  , _intermolecularInit :: !e
   } deriving (Show)
 
 type PP = (Z:.Nuc:.Nuc:.Nuc:.Nuc)
