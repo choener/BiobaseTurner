@@ -32,7 +32,7 @@ import Data.Primitive.Types
 
 import Biobase.Primary
 import Biobase.Secondary
-import Data.PrimitiveArray
+import Data.PrimitiveArray as PA
 import Data.PrimitiveArray.Zero
 
 
@@ -55,26 +55,26 @@ type Turner2004 = Turner2004Model Energy
 -- and the actual element type 'e'.
 
 data Turner2004Model e = Turner2004Model
-  { _stack              :: !(U PP e)
-  , _dangle3            :: !(U PN e)
-  , _dangle5            :: !(U PN e)
-  , _hairpinL           :: !(U DIM1 e)
-  , _hairpinMM          :: !(U PNN e)
+  { _stack              :: !(Unboxed PP e)
+  , _dangle3            :: !(Unboxed PN e)
+  , _dangle5            :: !(Unboxed PN e)
+  , _hairpinL           :: !(Unboxed DIM1 e)
+  , _hairpinMM          :: !(Unboxed PNN e)
   , _hairpinLookup      :: !(M.Map ByteString e)
   , _hairpinGGG         :: !e
   , _hairpinCslope      :: !e
   , _hairpinCintercept  :: !e
   , _hairpinC3          :: !e
-  , _bulgeL             :: !(U DIM1 e)
+  , _bulgeL             :: !(Unboxed DIM1 e)
   , _bulgeSingleC       :: !e
-  , _iloop1x1           :: !(U PPNN e)
-  , _iloop2x1           :: !(U PPNNN e)
-  , _iloop2x2           :: !(U PPNNNN e)
-  , _iloopMM            :: !(U PNN e)
-  , _iloop2x3MM         :: !(U PNN e)
-  , _iloop1xnMM         :: !(U PNN e)
-  , _iloopL             :: !(U DIM1 e)
-  , _multiMM            :: !(U PNN e)
+  , _iloop1x1           :: !(Unboxed PPNN e)
+  , _iloop2x1           :: !(Unboxed PPNNN e)
+  , _iloop2x2           :: !(Unboxed PPNNNN e)
+  , _iloopMM            :: !(Unboxed PNN e)
+  , _iloop2x3MM         :: !(Unboxed PNN e)
+  , _iloop1xnMM         :: !(Unboxed PNN e)
+  , _iloopL             :: !(Unboxed DIM1 e)
+  , _multiMM            :: !(Unboxed PNN e)
   , _ninio              :: !e
   , _maxNinio           :: !e
   , _multiOffset        :: !e
@@ -82,10 +82,10 @@ data Turner2004Model e = Turner2004Model
   , _multiHelix         :: !e
   , _multiAsym          :: !e
   , _multiStrain        :: !e
-  , _extMM              :: !(U PNN e)
-  , _coaxial            :: !(U PP e) -- no intervening unpaired nucleotides
-  , _coaxStack          :: !(U PNN e)
-  , _tStackCoax         :: !(U PNN e)
+  , _extMM              :: !(Unboxed PNN e)
+  , _coaxial            :: !(Unboxed PP e) -- no intervening unpaired nucleotides
+  , _coaxStack          :: !(Unboxed PNN e)
+  , _tStackCoax         :: !(Unboxed PNN e)
   , _largeLoop          :: !e
   , _termAU             :: !e
   , _intermolecularInit :: !e
@@ -104,26 +104,26 @@ makeLenses ''Turner2004Model
 
 emap :: (VU.Unbox e, VU.Unbox e') => (e -> e') -> Turner2004Model e -> Turner2004Model e'
 emap f Turner2004Model{..} = Turner2004Model
-  { _stack              = amap f _stack
-  , _dangle3            = amap f _dangle3
-  , _dangle5            = amap f _dangle5
-  , _hairpinL           = amap f _hairpinL
-  , _hairpinMM          = amap f _hairpinMM
+  { _stack              = PA.map f _stack
+  , _dangle3            = PA.map f _dangle3
+  , _dangle5            = PA.map f _dangle5
+  , _hairpinL           = PA.map f _hairpinL
+  , _hairpinMM          = PA.map f _hairpinMM
   , _hairpinLookup      = M.map f _hairpinLookup
   , _hairpinGGG         = f _hairpinGGG
   , _hairpinCslope      = f _hairpinCslope
   , _hairpinCintercept  = f _hairpinCintercept
   , _hairpinC3          = f _hairpinC3
-  , _bulgeL             = amap f _bulgeL
+  , _bulgeL             = PA.map f _bulgeL
   , _bulgeSingleC       = f _bulgeSingleC
-  , _iloop1x1           = amap f _iloop1x1
-  , _iloop2x1           = amap f _iloop2x1
-  , _iloop2x2           = amap f _iloop2x2
-  , _iloopMM            = amap f _iloopMM
-  , _iloop2x3MM         = amap f _iloop2x3MM
-  , _iloop1xnMM         = amap f _iloop1xnMM
-  , _iloopL             = amap f _iloopL
-  , _multiMM            = amap f _multiMM
+  , _iloop1x1           = PA.map f _iloop1x1
+  , _iloop2x1           = PA.map f _iloop2x1
+  , _iloop2x2           = PA.map f _iloop2x2
+  , _iloopMM            = PA.map f _iloopMM
+  , _iloop2x3MM         = PA.map f _iloop2x3MM
+  , _iloop1xnMM         = PA.map f _iloop1xnMM
+  , _iloopL             = PA.map f _iloopL
+  , _multiMM            = PA.map f _multiMM
   , _ninio              = f _ninio
   , _maxNinio           = f _maxNinio
   , _multiOffset        = f _multiOffset
@@ -131,10 +131,10 @@ emap f Turner2004Model{..} = Turner2004Model
   , _multiHelix         = f _multiHelix
   , _multiAsym          = f _multiAsym
   , _multiStrain        = f _multiStrain
-  , _extMM              = amap f _extMM
-  , _coaxial            = amap f _coaxial
-  , _coaxStack          = amap f _coaxStack
-  , _tStackCoax         = amap f _tStackCoax
+  , _extMM              = PA.map f _extMM
+  , _coaxial            = PA.map f _coaxial
+  , _coaxStack          = PA.map f _coaxStack
+  , _tStackCoax         = PA.map f _tStackCoax
   , _largeLoop          = f _largeLoop
   , _termAU             = f _termAU
   , _intermolecularInit = f _intermolecularInit

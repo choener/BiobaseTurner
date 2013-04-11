@@ -58,8 +58,6 @@ import Biobase.Turner
 
 
 
-
-
 -- *
 
 -- | Given a directory, fill in the 'Turner2004' data structure
