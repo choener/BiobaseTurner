@@ -49,6 +49,7 @@ import Data.Map as M
 import Data.Maybe (fromJust)
 import qualified Data.List as L
 import System.FilePath.Posix
+import qualified Data.Vector.Unboxed as VU
 
 import Biobase.Primary
 import Biobase.Secondary
@@ -89,14 +90,14 @@ fromDir fp prefix suffix = do
     { _stack              = fromAssocs minPP  maxPP   infE $ L.zip keysPP  stack'
     , _dangle3            = fromAssocs minPB  maxPB   infE $ L.zip keysPB  dangle3'
     , _dangle5            = fromAssocs minPB  maxPB   infE $ L.zip keysPB  dangle5'
-    , _hairpinL           = fromAssocs (Z:.0) (Z:.30) infE $ L.zip d1_30 hairpinL'
+    , _hairpinL           = VU.fromList $ infE : hairpinL' -- fromAssocs (Z:.0) (Z:.30) infE $ L.zip d1_30 hairpinL'
     , _hairpinMM          = fromAssocs minPBB maxPBB infE $ L.zip keysPBB hairpinMM'
     , _hairpinLookup      = M.fromList $ hairpinLk3 ++ hairpinLk4 ++ hairpinLk6
     , _hairpinGGG         = Energy . L.head $ imisc' !! 8
     , _hairpinCslope      = Energy . L.head $ imisc' !! 9
     , _hairpinCintercept  = Energy . L.head $ imisc' !! 10
     , _hairpinC3          = Energy . L.head $ imisc' !! 11
-    , _bulgeL             = fromAssocs (Z:.0)      (Z:.30)     infE $ L.zip d1_30 bulgeL'
+    , _bulgeL             = VU.fromList $ infE : bulgeL' -- fromAssocs (Z:.0)      (Z:.30)     infE $ L.zip d1_30 bulgeL'
     , _bulgeSingleC       = Energy . L.head $ imisc' !! 13
     , _iloop1x1           = fromAssocs minPPBB   maxPPBB   infE $ L.zip keysPPBB   iloop1x1'
     , _iloop2x1           = fromAssocs minPPBBB  maxPPBBB  infE $ L.zip keysPPBBB  iloop2x1'
@@ -104,7 +105,7 @@ fromDir fp prefix suffix = do
     , _iloopMM            = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloopMM'
     , _iloop2x3MM         = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloop2x3MM'
     , _iloop1xnMM         = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloop1xnMM'
-    , _iloopL             = fromAssocs (Z:.0)    (Z:.30)   infE $ L.zip d1_30      iloopL'
+    , _iloopL             = VU.fromList $ infE : iloopL' -- fromAssocs (Z:.0)    (Z:.30)   infE $ L.zip d1_30      iloopL'
     , _multiMM            = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    multiMM'
     , _ninio              = Energy . L.head $ imisc' !! 2
     , _maxNinio           = Energy . L.head $ imisc' !! 1

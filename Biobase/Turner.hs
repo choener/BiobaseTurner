@@ -58,14 +58,14 @@ data Turner2004Model e = Turner2004Model
   { _stack              :: !(Unboxed PP e)
   , _dangle3            :: !(Unboxed PN e)
   , _dangle5            :: !(Unboxed PN e)
-  , _hairpinL           :: !(Unboxed DIM1 e)
+  , _hairpinL           :: !(VU.Vector e)
   , _hairpinMM          :: !(Unboxed PNN e)
   , _hairpinLookup      :: !(M.Map ByteString e)
   , _hairpinGGG         :: !e
   , _hairpinCslope      :: !e
   , _hairpinCintercept  :: !e
   , _hairpinC3          :: !e
-  , _bulgeL             :: !(Unboxed DIM1 e)
+  , _bulgeL             :: !(VU.Vector e)
   , _bulgeSingleC       :: !e
   , _iloop1x1           :: !(Unboxed PPNN e)
   , _iloop2x1           :: !(Unboxed PPNNN e)
@@ -73,7 +73,7 @@ data Turner2004Model e = Turner2004Model
   , _iloopMM            :: !(Unboxed PNN e)
   , _iloop2x3MM         :: !(Unboxed PNN e)
   , _iloop1xnMM         :: !(Unboxed PNN e)
-  , _iloopL             :: !(Unboxed DIM1 e)
+  , _iloopL             :: !(VU.Vector e)
   , _multiMM            :: !(Unboxed PNN e)
   , _ninio              :: !e
   , _maxNinio           :: !e
@@ -107,14 +107,14 @@ emap f Turner2004Model{..} = Turner2004Model
   { _stack              = PA.map f _stack
   , _dangle3            = PA.map f _dangle3
   , _dangle5            = PA.map f _dangle5
-  , _hairpinL           = PA.map f _hairpinL
+  , _hairpinL           = VU.map f _hairpinL
   , _hairpinMM          = PA.map f _hairpinMM
   , _hairpinLookup      = M.map f _hairpinLookup
   , _hairpinGGG         = f _hairpinGGG
   , _hairpinCslope      = f _hairpinCslope
   , _hairpinCintercept  = f _hairpinCintercept
   , _hairpinC3          = f _hairpinC3
-  , _bulgeL             = PA.map f _bulgeL
+  , _bulgeL             = VU.map f _bulgeL
   , _bulgeSingleC       = f _bulgeSingleC
   , _iloop1x1           = PA.map f _iloop1x1
   , _iloop2x1           = PA.map f _iloop2x1
@@ -122,7 +122,7 @@ emap f Turner2004Model{..} = Turner2004Model
   , _iloopMM            = PA.map f _iloopMM
   , _iloop2x3MM         = PA.map f _iloop2x3MM
   , _iloop1xnMM         = PA.map f _iloop1xnMM
-  , _iloopL             = PA.map f _iloopL
+  , _iloopL             = VU.map f _iloopL
   , _multiMM            = PA.map f _multiMM
   , _ninio              = f _ninio
   , _maxNinio           = f _maxNinio
