@@ -238,8 +238,8 @@ miscFromFile fp = runResourceT $ sourceFile fp $$ parseMiscLoop
 
 -- |
 
-tabFromFile :: FilePath -> IO [(ByteString,Energy)]
-tabFromFile fp = runResourceT $ sourceFile fp $$ parseTabulated
+tabFromFile :: FilePath -> IO [(Primary,Energy)]
+tabFromFile fp = fmap (L.map (first mkPrimary)) . runResourceT $ sourceFile fp $$ parseTabulated
 
 allEq [] = True
 allEq (x:xs) = L.all (==x) xs

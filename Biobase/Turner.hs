@@ -60,7 +60,7 @@ data Turner2004Model e = Turner2004Model
   , _dangle5            :: !(Unboxed PN e)
   , _hairpinL           :: !(VU.Vector e)
   , _hairpinMM          :: !(Unboxed PNN e)
-  , _hairpinLookup      :: !(M.Map ByteString e)
+  , _hairpinLookup      :: !(M.Map Primary e)
   , _hairpinGGG         :: !e
   , _hairpinCslope      :: !e
   , _hairpinCintercept  :: !e
