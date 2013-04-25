@@ -80,7 +80,7 @@ fromDir fp prefix suffix = do
   iloopMM'    <- blockFromFile $ fp </> prefix ++ "tstacki" <.> suffix
   iloop2x3MM' <- blockFromFile $ fp </> prefix ++ "tstacki23" <.> suffix
   iloop1xnMM' <- blockFromFile $ fp </> prefix ++ "tstacki1n" <.> suffix
-  multiMM'    <- blockFromFile $ fp </> prefix ++ "tstacki" <.> suffix
+  multiMM'    <- blockFromFile $ fp </> prefix ++ "tstackm" <.> suffix
   imisc'      <- miscFromFile  $ fp </> prefix ++ "miscloop" <.> suffix
   extMM'      <- blockFromFile $ fp </> prefix ++ "tstack" <.> suffix
   coaxial'    <- blockFromFile $ fp </> prefix ++ "coaxial" <.> suffix
