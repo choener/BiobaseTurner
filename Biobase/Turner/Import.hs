@@ -37,6 +37,7 @@
 module Biobase.Turner.Import where
 
 import Control.Arrow
+import Control.Monad.Trans.Resource (runResourceT)
 import Data.Array.Repa.Index
 import Data.ByteString.Char8 as BS
 import Data.ByteString.Lex.Double

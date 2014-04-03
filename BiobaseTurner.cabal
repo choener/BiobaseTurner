@@ -35,6 +35,8 @@ library
     bytestring        >= 0.9    ,
     bytestring-lexing >= 0.4    ,
     conduit           >= 0.5    ,
+    conduit-extra     >= 1.0    ,
+    resourcet         >= 0.4    ,
     containers        >= 0.4    ,
     filepath          >= 1      ,
     lens              >= 3.8    ,
