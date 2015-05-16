@@ -1,7 +1,3 @@
-{-# LANGUAGE PatternGuards #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 -- | Turner file parser. Returns a Turner2004 data structure. Requires an
 -- annoying amount of boilerplate.
