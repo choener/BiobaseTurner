@@ -30,12 +30,13 @@
 --
 --TODO not sure if dangle3/dangle5 are correctly split or if they should switch
 
-module Biobase.Turner.Import where
+module Biobase.Turner.Import.Turner where
 
 import           Control.Arrow
 import           Data.ByteString.Char8 (ByteString)
 import           Data.ByteString.Lex.Double
 import           Data.Char
+import           Data.Default
 import           Data.List (groupBy)
 import           Data.List.Split
 import           Data.Map.Strict (Map)
@@ -49,11 +50,12 @@ import           System.FilePath.Posix
 import           Biobase.Primary
 import           Biobase.Primary.Letter
 import           Biobase.Primary.Nuc.RNA
-import qualified Biobase.Primary.Nuc.DNA as DNA
 import           Biobase.Secondary
+import           Biobase.Types.Energy
 import           Data.PrimitiveArray hiding (C, map)
+import qualified Biobase.Primary.Nuc.DNA as DNA
 
-import Biobase.Turner
+import           Biobase.Turner
 
 
 
@@ -85,40 +87,40 @@ fromDir fp prefix suffix = do
   cstack'     <- blockFromFile $ fp </> prefix ++ "coaxstack" <.> suffix
   tstack'     <- blockFromFile $ fp </> prefix ++ "tstackcoax" <.> suffix
   return Turner2004Model
-    { _stack              = fromAssocs minPP  maxPP   infE $ L.zip keysPP  stack'
-    , _dangle3            = fromAssocs minPB  maxPB   infE $ L.zip keysPB  dangle3'
-    , _dangle5            = fromAssocs minPB  maxPB   infE $ L.zip keysPB  dangle5'
-    , _hairpinL           = VU.fromList $ infE : hairpinL' -- fromAssocs (Z:.0) (Z:.30) infE $ L.zip d1_30 hairpinL'
-    , _hairpinMM          = fromAssocs minPBB maxPBB infE $ L.zip keysPBB hairpinMM'
+    { _stack              = fromAssocs minPP  maxPP   def $ L.zip keysPP  stack'
+    , _dangle3            = fromAssocs minPB  maxPB   def $ L.zip keysPB  dangle3'
+    , _dangle5            = fromAssocs minPB  maxPB   def $ L.zip keysPB  dangle5'
+    , _hairpinL           = VU.fromList $ def : hairpinL' -- fromAssocs (Z:.0) (Z:.30) def $ L.zip d1_30 hairpinL'
+    , _hairpinMM          = fromAssocs minPBB maxPBB def $ L.zip keysPBB hairpinMM'
     , _hairpinLookup      = M.fromList $ hairpinLk3 ++ hairpinLk4 ++ hairpinLk6
-    , _hairpinGGG         = Energy . L.head $ imisc' !! 8
-    , _hairpinCslope      = Energy . L.head $ imisc' !! 9
-    , _hairpinCintercept  = Energy . L.head $ imisc' !! 10
-    , _hairpinC3          = Energy . L.head $ imisc' !! 11
-    , _bulgeL             = VU.fromList $ infE : bulgeL' -- fromAssocs (Z:.0)      (Z:.30)     infE $ L.zip d1_30 bulgeL'
-    , _bulgeSingleC       = Energy . L.head $ imisc' !! 13
-    , _iloop1x1           = fromAssocs minPPBB   maxPPBB   infE $ L.zip keysPPBB   iloop1x1'
-    , _iloop2x1           = fromAssocs minPPBBB  maxPPBBB  infE $ L.zip keysPPBBB  iloop2x1'
-    , _iloop2x2           = fromAssocs minPPBBBB maxPPBBBB infE $ L.zip keysPPBBBBrna iloop2x2' -- (if (prefix == "" || suffix == "dh") then keysPPBBBBrna else keysPPBBBBdna) iloop2x2'
-    , _iloopMM            = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloopMM'
-    , _iloop2x3MM         = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloop2x3MM'
-    , _iloop1xnMM         = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloop1xnMM'
-    , _iloopL             = VU.fromList $ infE : iloopL' -- fromAssocs (Z:.0)    (Z:.30)   infE $ L.zip d1_30      iloopL'
-    , _multiMM            = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    multiMM'
-    , _ninio              = Energy . L.head $ imisc' !! 2
-    , _maxNinio           = Energy . L.head $ imisc' !! 1
-    , _multiOffset        = Energy $ (imisc' !! 3) !! 0
-    , _multiNuc           = Energy $ (imisc' !! 3) !! 1
-    , _multiHelix         = Energy $ (imisc' !! 3) !! 2
-    , _multiAsym          = Energy . L.head $ imisc' !! 5
-    , _multiStrain        = Energy . L.head $ imisc' !! 6
-    , _extMM              = fromAssocs minPBB maxPBB infE $ L.zip keysPBB extMM'
-    , _coaxial            = fromAssocs minPP  maxPP  infE $ L.zip keysPP  coaxial'
-    , _coaxStack          = fromAssocs minPBB maxPBB infE $ L.zip keysPBB cstack'
-    , _tStackCoax         = fromAssocs minPBB maxPBB infE $ L.zip keysPBB tstack'
-    , _largeLoop          = Energy . L.head $ imisc' !! 0
-    , _termAU             = Energy . L.head $ imisc' !! 7
-    , _intermolecularInit = Energy . L.head $ imisc' !! 12
+    , _hairpinGGG         = DG . L.head $ imisc' !! 8
+    , _hairpinCslope      = DG . L.head $ imisc' !! 9
+    , _hairpinCintercept  = DG . L.head $ imisc' !! 10
+    , _hairpinC3          = DG . L.head $ imisc' !! 11
+    , _bulgeL             = VU.fromList $ def : bulgeL' -- fromAssocs (Z:.0)      (Z:.30)     def $ L.zip d1_30 bulgeL'
+    , _bulgeSingleC       = DG . L.head $ imisc' !! 13
+    , _iloop1x1           = fromAssocs minPPBB   maxPPBB   def $ L.zip keysPPBB   iloop1x1'
+    , _iloop2x1           = fromAssocs minPPBBB  maxPPBBB  def $ L.zip keysPPBBB  iloop2x1'
+    , _iloop2x2           = fromAssocs minPPBBBB maxPPBBBB def $ L.zip keysPPBBBBrna iloop2x2' -- (if (prefix == "" || suffix == "dh") then keysPPBBBBrna else keysPPBBBBdna) iloop2x2'
+    , _iloopMM            = fromAssocs minPBB    maxPBB    def $ L.zip keysPBB    iloopMM'
+    , _iloop2x3MM         = fromAssocs minPBB    maxPBB    def $ L.zip keysPBB    iloop2x3MM'
+    , _iloop1xnMM         = fromAssocs minPBB    maxPBB    def $ L.zip keysPBB    iloop1xnMM'
+    , _iloopL             = VU.fromList $ def : iloopL' -- fromAssocs (Z:.0)    (Z:.30)   def $ L.zip d1_30      iloopL'
+    , _multiMM            = fromAssocs minPBB    maxPBB    def $ L.zip keysPBB    multiMM'
+    , _ninio              = DG . L.head $ imisc' !! 2
+    , _maxNinio           = DG . L.head $ imisc' !! 1
+    , _multiOffset        = DG $ (imisc' !! 3) !! 0
+    , _multiNuc           = DG $ (imisc' !! 3) !! 1
+    , _multiHelix         = DG $ (imisc' !! 3) !! 2
+    , _multiAsym          = DG . L.head $ imisc' !! 5
+    , _multiStrain        = DG . L.head $ imisc' !! 6
+    , _extMM              = fromAssocs minPBB maxPBB def $ L.zip keysPBB extMM'
+    , _coaxial            = fromAssocs minPP  maxPP  def $ L.zip keysPP  coaxial'
+    , _coaxStack          = fromAssocs minPBB maxPBB def $ L.zip keysPBB cstack'
+    , _tStackCoax         = fromAssocs minPBB maxPBB def $ L.zip keysPBB tstack'
+    , _largeLoop          = DG . L.head $ imisc' !! 0
+    , _termAU             = DG . L.head $ imisc' !! 7
+    , _intermolecularInit = DG . L.head $ imisc' !! 12
     }
 
 minPP     = Z:.N:.N:.N:.N -- (minP,minP)
@@ -155,46 +157,44 @@ plist11 = [(A,U),(C,G),(G,C),(U,A),(G,U),(U,G)]
 plist22rna = [(A,U),(C,G),(G,C),(G,U),(U,A),(U,G)]
 plist22dna = [(DNA.A,DNA.T),(DNA.C,DNA.G),(DNA.G,DNA.C),(DNA.T,DNA.A),(DNA.G,DNA.T),(DNA.T,DNA.G)]
 
-infE = Energy 999999
-
 -- * Conduit stuff
 
 -- | extract values. "." - values are extracted as > 100k
 
-values :: ByteString -> [Energy]
+values :: ByteString -> [DeltaGibbs]
 values xs
   | BS.null ys
     = []
   | "." `BS.isPrefixOf` ys
-    = infE : values (BS.drop 1 ys)
+    = def : values (BS.drop 1 ys)
   | Just (d,zs) <- readDouble ys
-    = Energy d : values zs
+    = DG d : values zs
   where ys = BS.dropWhile isSpace xs
 
 -- | Iteratee to parse tabulated loops (hairpins).
 
-parseTabulated :: ByteString -> [(ByteString,Energy)]
+parseTabulated :: ByteString -> [(ByteString,DeltaGibbs)]
 parseTabulated = map f . filter (not . BS.all isSpace) . drop 2 . BS.lines
   where f x
-          | Just (d,_) <- readDouble v = (k,Energy d)
+          | Just (d,_) <- readDouble v = (k,DG d)
           | otherwise = error $ "tabulated: <" ++ BS.unpack x ++ ">"
           where (k,v) = second (BS.dropWhile isSpace) . BS.span (not . isSpace) . BS.dropWhile isSpace $ x
 {-
-parseTabulated :: Monad m => Sink ByteString m [(ByteString,Energy)]
+parseTabulated :: Monad m => Sink ByteString m [(ByteString,DeltaGibbs)]
 parseTabulated = C.lines =$ CL.filter (not . BS.all isSpace) =$ g where
   g = do
     CL.drop 2
     xs <- CL.map f =$ consume
     return xs
   f x
-    | Just (d,_) <- readDouble v = (k,Energy d)
+    | Just (d,_) <- readDouble v = (k,DG d)
     | otherwise = error $ "tabulated: <" ++ BS.unpack x ++ ">"
     where (k,v) = second (BS.dropWhile isSpace) . BS.span (not . isSpace) . BS.dropWhile isSpace $ x
 -}
 
 -- | Convenience function
 
-blockFromFile :: FilePath -> IO [Energy]
+blockFromFile :: FilePath -> IO [DeltaGibbs]
 blockFromFile = fmap parseBlocks . BS.readFile
 {-
 blockFromFile fp = do
@@ -206,14 +206,14 @@ blockFromFile fp = do
 
 -- | Transform input stream into list of list of doubles
 
-parseBlocks :: ByteString -> [Energy]
+parseBlocks :: ByteString -> [DeltaGibbs]
 parseBlocks = concat . filter (not . null) . map f . BS.lines
   where
 {-
-parseBlocks :: Monad m => Conduit ByteString m [Energy]
+parseBlocks :: Monad m => Conduit ByteString m [DeltaGibbs]
 parseBlocks = C.lines =$= CL.map f =$= CL.filter (not . L.null) where
 -}
-  f :: ByteString -> [Energy]
+  f :: ByteString -> [DeltaGibbs]
   f x
     | "5'" `BS.isPrefixOf` y = []
     | "3'" `BS.isPrefixOf` y = []
@@ -258,7 +258,7 @@ miscFromFile = fmap parseMiscLoop . BS.readFile
 
 -- |
 
-tabFromFile :: FilePath -> IO [(Primary RNA,Energy)]
+tabFromFile :: FilePath -> IO [(Primary RNA,DeltaGibbs)]
 -- tabFromFile fp = fmap (L.map (first mkPrimary)) . runResourceT $ sourceFile fp $$ parseTabulated
 tabFromFile = fmap (L.map (first primary)) . fmap parseTabulated . BS.readFile
 
