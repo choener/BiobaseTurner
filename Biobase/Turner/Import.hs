@@ -32,25 +32,26 @@
 
 module Biobase.Turner.Import where
 
-import Control.Arrow
-import Control.Monad.Trans.Resource (runResourceT)
-import Data.Array.Repa.Index
-import Data.ByteString.Char8 as BS
-import Data.ByteString.Lex.Double
-import Data.Char
-import Data.Conduit as C
-import Data.Conduit.Binary as C
-import Data.Conduit.List as CL
-import Data.List.Split
-import Data.Map as M
-import Data.Maybe (fromJust)
+import           Control.Arrow
+import           Data.ByteString.Char8 (ByteString)
+import           Data.ByteString.Lex.Double
+import           Data.Char
+import           Data.List (groupBy)
+import           Data.List.Split
+import           Data.Map.Strict (Map)
+import           Data.Maybe (fromJust)
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.List as L
-import System.FilePath.Posix
+import qualified Data.Map.Strict as M
 import qualified Data.Vector.Unboxed as VU
+import           System.FilePath.Posix
 
-import Biobase.Primary
-import Biobase.Secondary
-import Data.PrimitiveArray
+import           Biobase.Primary
+import           Biobase.Primary.Letter
+import           Biobase.Primary.Nuc.RNA
+import qualified Biobase.Primary.Nuc.DNA as DNA
+import           Biobase.Secondary
+import           Data.PrimitiveArray hiding (C, map)
 
 import Biobase.Turner
 
@@ -98,7 +99,7 @@ fromDir fp prefix suffix = do
     , _bulgeSingleC       = Energy . L.head $ imisc' !! 13
     , _iloop1x1           = fromAssocs minPPBB   maxPPBB   infE $ L.zip keysPPBB   iloop1x1'
     , _iloop2x1           = fromAssocs minPPBBB  maxPPBBB  infE $ L.zip keysPPBBB  iloop2x1'
-    , _iloop2x2           = fromAssocs minPPBBBB maxPPBBBB infE $ L.zip (if (prefix == "" || suffix == "dh") then keysPPBBBBrna else keysPPBBBBdna) iloop2x2'
+    , _iloop2x2           = fromAssocs minPPBBBB maxPPBBBB infE $ L.zip keysPPBBBBrna iloop2x2' -- (if (prefix == "" || suffix == "dh") then keysPPBBBBrna else keysPPBBBBdna) iloop2x2'
     , _iloopMM            = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloopMM'
     , _iloop2x3MM         = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloop2x3MM'
     , _iloop1xnMM         = fromAssocs minPBB    maxPBB    infE $ L.zip keysPBB    iloop1xnMM'
@@ -120,20 +121,20 @@ fromDir fp prefix suffix = do
     , _intermolecularInit = Energy . L.head $ imisc' !! 12
     }
 
-minPP     = Z:.nN:.nN:.nN:.nN -- (minP,minP)
-maxPP     = Z:.nU:.nU:.nU:.nU -- (maxP,maxP)
-minP      = Z:.nN:.nN -- (nN,nN)
-maxP      = Z:.nU:.nU -- (nU,nU)
-minPB     = minP:.nN -- (minP,nN)
-maxPB     = maxP:.nU -- (maxP,nU)
-minPBB    = minPB:.nN -- (minP,nN,nN)
-maxPBB    = maxPB:.nU -- (maxP,nU,nU)
-minPPBB   = minPP:.nN:.nN -- (minP,minP,(nN,nN))
-maxPPBB   = maxPP:.nU:.nU -- (maxP,maxP,(nU,nU))
-minPPBBB  = minPPBB:.nN -- (minP,minP,(nN,nN,nN))
-maxPPBBB  = maxPPBB:.nU -- (maxP,maxP,(nU,nU,nU))
-minPPBBBB = minPPBBB:.nN -- (minP,minP,(nN,nN,nN,nN))
-maxPPBBBB = maxPPBBB:.nU -- (maxP,maxP,(nU,nU,nU,nU))
+minPP     = Z:.N:.N:.N:.N -- (minP,minP)
+maxPP     = Z:.U:.U:.U:.U -- (maxP,maxP)
+minP      = Z:.N:.N -- (nN,nN)
+maxP      = Z:.U:.U -- (nU,nU)
+minPB     = minP:.N -- (minP,nN)
+maxPB     = maxP:.U -- (maxP,nU)
+minPBB    = minPB:.N -- (minP,nN,nN)
+maxPBB    = maxPB:.U -- (maxP,nU,nU)
+minPPBB   = minPP:.N:.N -- (minP,minP,(nN,nN))
+maxPPBB   = maxPP:.U:.U -- (maxP,maxP,(nU,nU))
+minPPBBB  = minPPBB:.N -- (minP,minP,(nN,nN,nN))
+maxPPBBB  = maxPPBB:.U -- (maxP,maxP,(nU,nU,nU))
+minPPBBBB = minPPBBB:.N -- (minP,minP,(nN,nN,nN,nN))
+maxPPBBBB = maxPPBBB:.U -- (maxP,maxP,(nU,nU,nU,nU))
 
 d1_30 = L.map (Z:.) [1..30]
 
@@ -150,9 +151,9 @@ keysPPBBBBrna = [ {- ((k1,k2),(k4,k3),(k5,k6,k7,k8)) -} Z:.k1:.k2:.k4:.k3:.k5:.k
 keysPPBBBBdna = [ {- ((k1,k2),(k4,k3),(k5,k6,k7,k8)) -} Z:.k1:.k2:.k4:.k3:.k5:.k6:.k7:.k8
                 | (k1,k2) <- plist22dna, (k3,k4) <- plist22dna, k5 <- acgu, k8 <- acgu, k6 <- acgu, k7 <- acgu]
 
-plist11 = [(nA,nU),(nC,nG),(nG,nC),(nU,nA),(nG,nU),(nU,nG)]
-plist22rna = [(nA,nU),(nC,nG),(nG,nC),(nG,nU),(nU,nA),(nU,nG)]
-plist22dna = [(nA,nT),(nC,nG),(nG,nC),(nT,nA),(nG,nT),(nT,nG)]
+plist11 = [(A,U),(C,G),(G,C),(U,A),(G,U),(U,G)]
+plist22rna = [(A,U),(C,G),(G,C),(G,U),(U,A),(U,G)]
+plist22dna = [(DNA.A,DNA.T),(DNA.C,DNA.G),(DNA.G,DNA.C),(DNA.T,DNA.A),(DNA.G,DNA.T),(DNA.T,DNA.G)]
 
 infE = Energy 999999
 
@@ -164,7 +165,7 @@ values :: ByteString -> [Energy]
 values xs
   | BS.null ys
     = []
-  | "." `isPrefixOf` ys
+  | "." `BS.isPrefixOf` ys
     = infE : values (BS.drop 1 ys)
   | Just (d,zs) <- readDouble ys
     = Energy d : values zs
@@ -172,6 +173,13 @@ values xs
 
 -- | Iteratee to parse tabulated loops (hairpins).
 
+parseTabulated :: ByteString -> [(ByteString,Energy)]
+parseTabulated = map f . filter (not . BS.all isSpace) . drop 2 . BS.lines
+  where f x
+          | Just (d,_) <- readDouble v = (k,Energy d)
+          | otherwise = error $ "tabulated: <" ++ BS.unpack x ++ ">"
+          where (k,v) = second (BS.dropWhile isSpace) . BS.span (not . isSpace) . BS.dropWhile isSpace $ x
+{-
 parseTabulated :: Monad m => Sink ByteString m [(ByteString,Energy)]
 parseTabulated = C.lines =$ CL.filter (not . BS.all isSpace) =$ g where
   g = do
@@ -182,28 +190,37 @@ parseTabulated = C.lines =$ CL.filter (not . BS.all isSpace) =$ g where
     | Just (d,_) <- readDouble v = (k,Energy d)
     | otherwise = error $ "tabulated: <" ++ BS.unpack x ++ ">"
     where (k,v) = second (BS.dropWhile isSpace) . BS.span (not . isSpace) . BS.dropWhile isSpace $ x
+-}
 
 -- | Convenience function
 
 blockFromFile :: FilePath -> IO [Energy]
+blockFromFile = fmap parseBlocks . BS.readFile
+{-
 blockFromFile fp = do
   xs <- runResourceT $ sourceFile fp $$ parseBlocks =$ consume
   if (allEq $ L.map L.length xs)
     then return $ L.concat xs
     else error $ "in file: " ++ fp ++ " we have unequal line lengths"
+-}
 
 -- | Transform input stream into list of list of doubles
 
+parseBlocks :: ByteString -> [Energy]
+parseBlocks = concat . filter (not . null) . map f . BS.lines
+  where
+{-
 parseBlocks :: Monad m => Conduit ByteString m [Energy]
 parseBlocks = C.lines =$= CL.map f =$= CL.filter (not . L.null) where
+-}
+  f :: ByteString -> [Energy]
   f x
-    | "5'" `isPrefixOf` y = []
-    | "3'" `isPrefixOf` y = []
-    | "." `isPrefixOf`  y = values y
+    | "5'" `BS.isPrefixOf` y = []
+    | "3'" `BS.isPrefixOf` y = []
+    | "." `BS.isPrefixOf`  y = values y
     | Just (d,xs) <- readDouble y = values y
     | otherwise = [] -- error $ BS.unpack x
     where y = BS.dropWhile isSpace x
-
 
 
 -- | Parses the miscloop table
@@ -211,12 +228,17 @@ parseBlocks = C.lines =$= CL.map f =$= CL.filter (not . L.null) where
 -- NOTE extra brownie points for miscloop.dat for providing data in a form that
 -- does not conform to normal number encoding.
 
+parseMiscLoop :: ByteString -> [[Double]]
+parseMiscLoop = map f . drop 1 . groupBy (\x y -> not $ BS.null y) . BS.lines
+  where f = map readD . BS.words . last
+{-
 parseMiscLoop :: Monad m => Sink ByteString m [[Double]]
 parseMiscLoop = C.lines =$ CL.groupBy (\x y -> not $ BS.null y) =$ f where
   f = do
     CL.drop 1
     xs <- consume
     return . L.map (L.map readD . BS.words . L.last) $ xs
+-}
 
 -- | Parses stupidly encoded values like ".6" and "-.0".
 
@@ -231,12 +253,14 @@ readD xs
 -- |
 
 miscFromFile :: FilePath -> IO [[Double]]
-miscFromFile fp = runResourceT $ sourceFile fp $$ parseMiscLoop
+--miscFromFile fp = runResourceT $ sourceFile fp $$ parseMiscLoop
+miscFromFile = fmap parseMiscLoop . BS.readFile
 
 -- |
 
-tabFromFile :: FilePath -> IO [(Primary,Energy)]
-tabFromFile fp = fmap (L.map (first mkPrimary)) . runResourceT $ sourceFile fp $$ parseTabulated
+tabFromFile :: FilePath -> IO [(Primary RNA,Energy)]
+-- tabFromFile fp = fmap (L.map (first mkPrimary)) . runResourceT $ sourceFile fp $$ parseTabulated
+tabFromFile = fmap (L.map (first primary)) . fmap parseTabulated . BS.readFile
 
 allEq [] = True
 allEq (x:xs) = L.all (==x) xs

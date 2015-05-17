@@ -12,33 +12,29 @@
 module Biobase.Turner where
 
 
-import Control.Lens
-import Data.Array.Repa.Index
-import Data.ByteString (ByteString(..))
-import qualified Data.ByteString
+import           Control.Lens
+import           Data.Primitive.Types
+import           Data.Vector.Unboxed.Deriving
+import           Data.Vector.Unboxed (Vector)
 import qualified Data.Map as M
-import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as VU
-import qualified Data.Vector.Generic as VG
-import qualified Data.Vector.Generic.Mutable as VGM
-import Data.Primitive.Types
 
-import Biobase.Primary
-import Biobase.Secondary
-import Data.PrimitiveArray as PA
-import Data.PrimitiveArray.Zero
+import           Biobase.Primary
+import           Biobase.Primary.Nuc.RNA
+import           Biobase.Secondary
+import           Data.PrimitiveArray as PA
 
 
 
 -- | The actual Turner parameters return energies in Double format.
 
-newtype Energy = Energy Double
+newtype Energy = Energy { getEnergy :: Double }
   deriving (Eq,Ord,Num,Read,Show)
 
-deriving instance Prim Energy
-deriving instance VGM.MVector VU.MVector Energy
-deriving instance VG.Vector   VU.Vector  Energy
-deriving instance VU.Unbox Energy
+derivingUnbox "Energy"
+  [t| Energy -> Double |]
+  [|  getEnergy        |]
+  [|  Energy           |]
 
 -- | The Turner model with 'Energy's.
 
@@ -51,14 +47,14 @@ data Turner2004Model e = Turner2004Model
   { _stack              :: !(Unboxed PP e)
   , _dangle3            :: !(Unboxed PN e)
   , _dangle5            :: !(Unboxed PN e)
-  , _hairpinL           :: !(VU.Vector e)
+  , _hairpinL           :: !(Vector e)
   , _hairpinMM          :: !(Unboxed PNN e)
-  , _hairpinLookup      :: !(M.Map Primary e)
+  , _hairpinLookup      :: !(M.Map (Primary RNA) e)
   , _hairpinGGG         :: !e
   , _hairpinCslope      :: !e
   , _hairpinCintercept  :: !e
   , _hairpinC3          :: !e
-  , _bulgeL             :: !(VU.Vector e)
+  , _bulgeL             :: !(Vector e)
   , _bulgeSingleC       :: !e
   , _iloop1x1           :: !(Unboxed PPNN e)
   , _iloop2x1           :: !(Unboxed PPNNN e)
@@ -66,7 +62,7 @@ data Turner2004Model e = Turner2004Model
   , _iloopMM            :: !(Unboxed PNN e)
   , _iloop2x3MM         :: !(Unboxed PNN e)
   , _iloop1xnMM         :: !(Unboxed PNN e)
-  , _iloopL             :: !(VU.Vector e)
+  , _iloopL             :: !(Vector e)
   , _multiMM            :: !(Unboxed PNN e)
   , _ninio              :: !e
   , _maxNinio           :: !e
@@ -84,12 +80,12 @@ data Turner2004Model e = Turner2004Model
   , _intermolecularInit :: !e
   } deriving (Show)
 
-type PP = (Z:.Nuc:.Nuc:.Nuc:.Nuc)
-type PN = (Z:.Nuc:.Nuc:.Nuc)
-type PNN = (Z:.Nuc:.Nuc:.Nuc:.Nuc)
-type PPNN = PP:.Nuc:.Nuc
-type PPNNN = PPNN:.Nuc
-type PPNNNN = PPNNN:.Nuc
+type PP = (Z:.Letter RNA:.Letter RNA:.Letter RNA:.Letter RNA)
+type PN = (Z:.Letter RNA:.Letter RNA:.Letter RNA)
+type PNN = (Z:.Letter RNA:.Letter RNA:.Letter RNA:.Letter RNA)
+type PPNN = PP:.Letter RNA:.Letter RNA
+type PPNNN = PPNN:.Letter RNA
+type PPNNNN = PPNNN:.Letter RNA
 
 makeLenses ''Turner2004Model
 
