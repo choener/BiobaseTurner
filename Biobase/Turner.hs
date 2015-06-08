@@ -8,7 +8,9 @@
 
 module Biobase.Turner
   ( module Biobase.Turner.Types
+  , module Biobase.Turner.Import.Turner
   ) where
 
 import Biobase.Turner.Types
+import Biobase.Turner.Import.Turner
 

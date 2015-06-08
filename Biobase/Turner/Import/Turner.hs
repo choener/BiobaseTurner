@@ -34,7 +34,7 @@ module Biobase.Turner.Import.Turner where
 
 import           Control.Arrow
 import           Data.ByteString.Char8 (ByteString)
-import           Data.ByteString.Lex.Double
+import           Data.ByteString.Lex.Fractional
 import           Data.Char
 import           Data.Default
 import           Data.List (groupBy)
@@ -55,7 +55,7 @@ import           Biobase.Types.Energy
 import           Data.PrimitiveArray hiding (C, map)
 import qualified Biobase.Primary.Nuc.DNA as DNA
 
-import           Biobase.Turner
+import           Biobase.Turner.Types
 
 
 
@@ -167,7 +167,7 @@ values xs
     = []
   | "." `BS.isPrefixOf` ys
     = def : values (BS.drop 1 ys)
-  | Just (d,zs) <- readDouble ys
+  | Just (d,zs) <- readSigned readDecimal ys
     = DG d : values zs
   where ys = BS.dropWhile isSpace xs
 
@@ -176,7 +176,7 @@ values xs
 parseTabulated :: ByteString -> [(ByteString,DeltaGibbs)]
 parseTabulated = map f . filter (not . BS.all isSpace) . drop 2 . BS.lines
   where f x
-          | Just (d,_) <- readDouble v = (k,DG d)
+          | Just (d,_) <- readSigned readDecimal v = (k,DG d)
           | otherwise = error $ "tabulated: <" ++ BS.unpack x ++ ">"
           where (k,v) = second (BS.dropWhile isSpace) . BS.span (not . isSpace) . BS.dropWhile isSpace $ x
 {-
@@ -218,7 +218,7 @@ parseBlocks = C.lines =$= CL.map f =$= CL.filter (not . L.null) where
     | "5'" `BS.isPrefixOf` y = []
     | "3'" `BS.isPrefixOf` y = []
     | "." `BS.isPrefixOf`  y = values y
-    | Just (d,xs) <- readDouble y = values y
+    | Just (d,xs) <- readSigned readDecimal y = values y
     | otherwise = [] -- error $ BS.unpack x
     where y = BS.dropWhile isSpace x
 
@@ -247,7 +247,7 @@ readD xs
   | BS.null xs              = error "readD: null"
   | BS.head xs == '.'       = readD $ BS.cons '0' xs
   | "-." `BS.isPrefixOf` xs = readD $ "-0." `BS.append` BS.drop 2 xs
-  | Just (d,_) <- readDouble xs = d
+  | Just (d,_) <- readSigned readDecimal xs = d
   | otherwise = error $ BS.unpack xs
 
 -- |
