@@ -50,7 +50,7 @@ library
                , filepath
                , lens               >= 4        && < 5
                , primitive          >= 0.5      && < 0.7
-               , PrimitiveArray     >= 0.6.0    && < 0.6.1
+               , PrimitiveArray     >= 0.6.0    && < 0.6.2
                , split              >= 0.2      && < 0.3
                , vector             >= 0.10     && < 0.11
                , vector-th-unbox    >= 0.2      && < 0.3
