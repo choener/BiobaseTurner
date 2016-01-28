@@ -25,30 +25,6 @@ import           Data.PrimitiveArray as PA
 
 
 
-{-
-
--- | The actual Turner parameters return energies in Double format.
---
--- TODO to @BiobaseTypes@!
-
-newtype Energy = Energy { getEnergy :: Double }
-  deriving (Eq,Ord,Num,Fractional,Read,Show,Generic)
-
-derivingUnbox "Energy"
-  [t| Energy -> Double |]
-  [|  getEnergy        |]
-  [|  Energy           |]
-
-instance Binary    Energy
-instance Serialize Energy
-instance FromJSON  Energy
-instance ToJSON    Energy
-
-instance Default Energy where
-  def = 1/0
-
--}
-
 -- | The Turner model with 'Energy's.
 
 type Turner2004 = Turner2004Model DeltaGibbs

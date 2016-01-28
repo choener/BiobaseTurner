@@ -56,17 +56,14 @@ library
                , vector-th-unbox    >= 0.2      && < 0.3
   exposed-modules:
     Biobase.Turner
-    Biobase.Turner.Default
-    Biobase.Turner.Types
-    Biobase.Turner.Export.Vienna
     Biobase.Turner.Import.Turner
-    Biobase.Turner.Import.Vienna
+    Biobase.Turner.Types
   default-language:
     Haskell2010
   default-extensions: BangPatterns
                     , DeriveGeneric
                     , FlexibleContexts
-                    , UndecidableInstances
+                    , GADTs
                     , GeneralizedNewtypeDeriving
                     , MultiParamTypeClasses
                     , NoMonomorphismRestriction
@@ -78,6 +75,7 @@ library
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators
+                    , UndecidableInstances
   ghc-options:
     -O2 -funbox-strict-fields
 
