@@ -1,4 +1,4 @@
-resolver: lts-5.0
+resolver: lts-5.10
 
 packages:
 - '.'
@@ -6,17 +6,16 @@ packages:
   extra-dep: true
 - location: ../Lib-PrimitiveArray/
   extra-dep: true
+- location: ../Lib-bimaps/
+  extra-dep: true
 
 extra-deps:
-- bimaps-0.0.0.4
 - BiobaseTypes-0.1.1.1
-- BiobaseXNA-0.9.2.2
 - cereal-text-0.1.0.1
 - OneTuple-0.2.1
 - OrderedBits-0.0.1.0
-- PrimitiveArray-0.7.0.1
 - storable-record-0.0.3.1
-- storable-tuple-0.0.2
+- storable-tuple-0.0.3.2
 - tuple-0.3.0.2
 
 flags: {}

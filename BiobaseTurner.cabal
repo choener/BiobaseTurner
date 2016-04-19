@@ -37,11 +37,11 @@ Extra-Source-Files:
 
 
 library
-  build-depends: base               >= 4.7      && < 4.9
+  build-depends: base               >= 4.7      && < 4.10
                , aeson              >= 0.8      && < 0.10
                , binary             >= 0.7      && < 0.8
-               , BiobaseTypes       >= 0.1.0    && < 0.1.2
-               , BiobaseXNA         >= 0.9.1    && < 0.9.3
+               , BiobaseTypes       >= 0.1.0
+               , BiobaseXNA         >= 0.9.1
                , bytestring         >= 0.10     && < 0.11
                , bytestring-lexing  >= 0.5.0.2  && < 0.6
                , cereal             >= 0.4      && < 0.6
@@ -50,7 +50,7 @@ library
                , filepath
                , lens               >= 4        && < 5
                , primitive          >= 0.5      && < 0.7
-               , PrimitiveArray     >= 0.6.0    && < 0.7.1
+               , PrimitiveArray     >= 0.6.0
                , split              >= 0.2      && < 0.3
                , vector             >= 0.10     && < 0.12
                , vector-th-unbox    >= 0.2      && < 0.3
