@@ -9,14 +9,14 @@
 
 module Main where
 
-import Test.Framework.Providers.HUnit
-import Test.Framework.Providers.QuickCheck2
-import Test.Framework.TH
-import Test.HUnit
-import Test.QuickCheck.Modifiers
-import Test.QuickCheck.Property
 import Control.Lens
 import Data.Default
+import Test.QuickCheck.Modifiers
+import Test.QuickCheck.Property
+import Test.Tasty
+import Test.Tasty.HUnit
+import Test.Tasty.QuickCheck
+import Test.Tasty.TH
 
 import Data.PrimitiveArray ( (!), Z(..), (:.)(..) )
 import Biobase.Primary.Nuc.RNA
