@@ -4,7 +4,7 @@ author:         Christian Hoener zu Siederdissen
 maintainer:     choener@bioinf.uni-leipzig.de
 Homepage:       https://github.com/choener/BiobaseTurner
 bug-reports:    https://github.com/choener/BiobaseTurner/issues
-copyright:      Christian Hoener zu Siederdissen, 2010-2015
+copyright:      Christian Hoener zu Siederdissen, 2010-2017
 category:       Bioinformatics
 synopsis:       Import Turner RNA parameters
 license:        GPL-3
@@ -39,23 +39,23 @@ Extra-Source-Files:
 
 library
   build-depends: base               >= 4.7      && < 5.0
-               , aeson              >= 0.8      && < 1.2
-               , binary             >= 0.7      && < 0.9
-               , bytestring         >= 0.10     && < 0.11
-               , bytestring-lexing  >= 0.5.0.2  && < 0.6
-               , cereal             >= 0.4      && < 0.6
+               , aeson              >= 0.8
+               , binary             >= 0.7
+               , bytestring         >= 0.10
+               , bytestring-lexing  >= 0.5.0.2
+               , cereal             >= 0.4
                , containers
-               , data-default       >= 0.5      && < 0.6
+               , data-default       >= 0.5
                , filepath
-               , lens               >= 4        && < 5
-               , primitive          >= 0.5      && < 0.7
-               , split              >= 0.2      && < 0.3
-               , vector             >= 0.10     && < 0.12
-               , vector-th-unbox    >= 0.2      && < 0.3
+               , lens               >= 4
+               , primitive          >= 0.5
+               , split              >= 0.2
+               , vector             >= 0.10
+               , vector-th-unbox    >= 0.2
                --
                , BiobaseTypes       == 0.1.2.*
                , BiobaseXNA         == 0.9.3.*
-               , PrimitiveArray     == 0.7.2.*
+               , PrimitiveArray     == 0.8.0.*
   exposed-modules:
     Biobase.Turner
     Biobase.Turner.Import.Turner
@@ -89,7 +89,7 @@ executable TurnerConverter
                , binary
                , bytestring
                , cereal
-               , cmdargs          >= 0.10   && < 0.11
+               , cmdargs          >= 0.10
                , containers
                , vector
                --
@@ -123,7 +123,7 @@ test-suite properties
   default-extensions: TemplateHaskell
   build-depends: base
                , data-default
-               , HUnit              >= 1.2  &&  < 1.4
+               , HUnit              >= 1.2
                , lens
                , PrimitiveArray
                , QuickCheck
