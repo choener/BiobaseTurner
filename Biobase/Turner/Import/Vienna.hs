@@ -3,14 +3,18 @@
 
 module Biobase.Turner.Import.Vienna where
 
-import Text.Trifecta as TT
-import Data.Text (Text,pack)
-import Data.PrimitiveArray as PA hiding (map)
-import Control.Monad (guard)
-import Control.Applicative ( (<|>) )
+import           Control.Applicative ( (<|>) )
+import           Control.Monad (guard)
+import           Data.PrimitiveArray as PA hiding (map,fromList)
+import           Data.Text (Text,pack)
+import           Data.Vector.Unboxed (Vector,fromList)
+import           Text.Trifecta as TT
+import           Data.Map.Strict (Map)
+import qualified Data.Map.Strict as M
 
-import Biobase.Turner.Types
+import Biobase.Primary (Primary,RNA,primary)
 import Biobase.Turner.Import.Turner (minPP,maxPP,minPBB,maxPBB,minPB,maxPB,minPPBB,maxPPBB,minPPBBB,maxPPBBB,minPPBBBB,maxPPBBBB)
+import Biobase.Turner.Types
 import Biobase.Types.Energy
 
 
@@ -21,7 +25,7 @@ fromFile = TT.parseFromFile pVienna
 pVienna :: Parser Vienna2004
 pVienna = v2Header *> spaces *> (blocksToTurner <$> some (block <* whiteSpace)) <* v2End <* eof
   where v2Header = text "## RNAfold parameter file v2.0" <?> ".par Header"
-        v2End = text "#END"
+        v2End = text "#END" <* newline
 
 blocksToTurner = error "blocksToTurner"
 
@@ -35,18 +39,23 @@ data Block
   | BlockPPBB   Text EE (Arr PPNN)
   | BlockPPBBB  Text EE (Arr PPNNN)
   | BlockPPBBBB Text EE (Arr PPNNNN)
+  | BlockLinear Text EE (Vector DeltaDekaGibbs)
+  | BlockML     Text DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs
+  | BlockNinio  Text DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs
+  | BlockMisc   Text DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs
+  | BlockLoops  Text    (Map (Primary RNA) (DeltaDekaGibbs,DeltaDekaGibbs))
 
 data EE = Entropy | Enthalpie
 
 type Arr i = Unboxed i DeltaDekaGibbs
 
 block :: Parser Block
-block = blockPP <|> blockPBB <|> blockPB <|> blockPPBB <|> blockPPBBB <|> blockPPBBBB
+block =   blockPP <|> blockPBB <|> blockPB <|> blockPPBB <|> blockPPBBB <|> blockPPBBBB
+      <|> blockLinear <|> blockML <|> blockNinio <|> blockMisc <|> blockLoops
 
 blockPP :: Parser Block
 blockPP = wrapBlock BlockPP blockHeader convertPP
-  where convertPP :: [Int] -> Parser (Arr PP)
-        convertPP vs = do
+  where convertPP vs = do
           let l = length vs
           guard (l == 7*7) <?> "expected 7*7=49 entries for blockPP but got " ++ show l
           return $ fromAssocs minPP maxPP (DekaG 999999) [error "blockPP"]
@@ -95,7 +104,37 @@ blockPPBBBB = wrapBlock BlockPPBBBB blockHeader convertPPBBBB
           return $ fromAssocs minPPBBBB maxPPBBBB (DekaG 999999) [error "blockPPBBBB"]
         blockHeader = ["int22"]
 
-wrapBlock :: (Text -> EE -> arr -> Block) -> [Text] -> ([Int] -> Parser arr) -> Parser Block
+blockLinear :: Parser Block
+blockLinear = wrapBlock BlockLinear blockHeader convertLinear
+  where convertLinear vs = do
+          let l = length vs
+          guard (l == 31) <?> "31 entries for blockLinear but got " ++ show l
+          return $ fromList vs
+        blockHeader = ["hairpin", "bulge", "interior"]
+
+blockML :: Parser Block
+blockML = BlockML <$> (try $ id <$ text "# " <*> text "ML_params" <* newline)
+                  <*> ddg <*> ddg <*> ddg <*> ddg <*> ddg <*> ddg
+
+blockNinio :: Parser Block
+blockNinio = BlockNinio <$> (try $ id <$ text "# " <*> text "NINIO" <* newline)
+                        <*> ddg <*> ddg <*> ddg
+
+blockMisc :: Parser Block
+blockMisc = BlockMisc <$> (try $ id <$ text "# " <*> text "Misc" <* newline)
+                      <*> ddg <*> ddg <*> ddg <*> ddg
+
+blockLoops :: Parser Block
+blockLoops = choice [BlockLoops <$> (try $ id <$ text "# " <*> text lp <* newline) <*> loopLines | lp <- loops]
+  where loopLines = M.fromList <$> some triplet -- `sepBy` newline
+        triplet = (\k v w -> (k,(v,w))) <$> (primary <$> some (oneOf "ACGU") <* spaces)
+                                        <*> ddg <*> ddg
+        loops = ["Hexaloops", "Tetraloops", "Triloops"]
+
+ddg :: Parser DeltaDekaGibbs
+ddg = (DekaG . fromIntegral) <$ spaces <*> integer
+
+wrapBlock :: (Text -> EE -> arr -> Block) -> [Text] -> ([DeltaDekaGibbs] -> Parser arr) -> Parser Block
 wrapBlock block blockHeader convert
   =   (\(t,e) vs -> block t e vs) <$> headerParser blockHeader <*> (arrayLines >>= convert)
   <?> "wrapBlock"
@@ -107,16 +146,16 @@ headerParser :: [Text] -> Parser (Text,EE)
 headerParser ps = choice [try $ (,) <$ text "#" <* whiteSpace <*> text p <*> pEE | p <- ps]
   where pEE = (Entropy <$ newline) <|> (Enthalpie <$ text "_enthalpies" <* newline)
 
-arrayLines :: Parser [Int]
+arrayLines :: Parser [DeltaDekaGibbs]
 arrayLines = do
   headerComment <- commentLine
   valueLines <- valueLine `sepEndBy` newline
-  return $ concat valueLines
+  return . map DekaG $ concat valueLines
 
 commentLine = optional $ between (text "/*") (text "*/") (spaces *> some (letter <|> oneOf ",") `sepEndBy` spaces) <?> "commentLine"
 
 valueLine :: Parser [Int]
-valueLine = spaces *> (fromInteger <$> integer) `sepEndBy` spaces <* commentLine -- <* newline
+valueLine = spaces *> (fromInteger <$> integer <|> 999999 <$ text "INF") `sepEndBy` spaces <* commentLine -- <* newline
 
 
 test = fromFile "data/rna_turner2004.par"
