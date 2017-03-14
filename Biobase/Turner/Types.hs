@@ -29,6 +29,8 @@ import           Data.PrimitiveArray as PA
 
 type Turner2004 = Turner2004Model DeltaGibbs
 
+type Vienna2004 = Turner2004Model DeltaDekaGibbs
+
 -- | The Turner energy tables. Parametrized over the actual element type
 -- 'e'.
 

@@ -1,7 +1,7 @@
 packages: .
-          ../Lib-PrimitiveArray
-          ../Lib-OrderedBits
-          ../Lib-DPutils
-          ../Lib-BiobaseXNA
-          ../Lib-BiobaseTypes
-          ../Lib-bimaps
+--          ../Lib-PrimitiveArray
+--          ../Lib-OrderedBits
+--          ../Lib-DPutils
+--          ../Lib-BiobaseXNA
+--          ../Lib-BiobaseTypes
+--          ../Lib-bimaps
