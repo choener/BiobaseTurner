@@ -5,29 +5,76 @@ module Biobase.Turner.Import.Vienna where
 
 import           Control.Applicative ( (<|>) )
 import           Control.Monad (guard)
+import           Data.List (foldl')
+import           Data.Map.Strict (Map)
 import           Data.PrimitiveArray as PA hiding (map,fromList)
 import           Data.Text (Text,pack)
 import           Data.Vector.Unboxed (Vector,fromList)
-import           Text.Trifecta as TT
-import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
+import           Text.Trifecta as TT
 
-import Biobase.Primary (Primary,RNA,primary)
-import Biobase.Turner.Import.Turner (minPP,maxPP,minPBB,maxPBB,minPB,maxPB,minPPBB,maxPPBB,minPPBBB,maxPPBBB,minPPBBBB,maxPPBBBB)
-import Biobase.Turner.Types
-import Biobase.Types.Energy
+import           Biobase.Primary (Primary,RNA,primary)
+import           Biobase.Turner.Types
+import           Biobase.Types.Energy
 
 
 
-fromFile :: FilePath -> IO (Maybe Vienna2004)
+fromFile :: FilePath -> IO (Maybe (Vienna2004,Vienna2004))
 fromFile = TT.parseFromFile pVienna
 
-pVienna :: Parser Vienna2004
+pVienna :: Parser (Vienna2004,Vienna2004)
 pVienna = v2Header *> spaces *> (blocksToTurner <$> some (block <* whiteSpace)) <* v2End <* eof
   where v2Header = text "## RNAfold parameter file v2.0" <?> ".par Header"
         v2End = text "#END" <* newline
 
-blocksToTurner = error "blocksToTurner"
+-- | Run through the parsed blocks and insert into @Vienna 2004@ model.
+
+blocksToTurner :: [Block] -> (Vienna2004,Vienna2004)
+blocksToTurner = foldl' go (emptyModel,emptyModel)
+  where go (s,h) = \case
+          BlockPP "stack" Entropy  arr -> ( s {_stack = arr} , h )
+          BlockPP "stack" Enthalpy arr -> ( s , h {_stack = arr} )
+          BlockPBB t Entropy arr
+            | t == "mismatch_hairpin"     -> (s {_hairpinMM = arr}  , h)
+            | t == "mismatch_interior"    -> (s {_iloopMM = arr}    , h)
+            | t == "mismatch_interior_1n" -> (s {_iloop1xnMM = arr} , h)
+            | t == "mismatch_interior_23" -> (s {_iloop2x3MM = arr} , h)
+            | t == "mismatch_multi"       -> (s {_multiMM = arr}    , h)
+            | t == "mismatch_exterior"    -> (s {_exteriorMM = arr} , h)
+          BlockPBB t Enthalpy arr
+            | t == "mismatch_hairpin"     -> (s , h {_hairpinMM = arr} )
+            | t == "mismatch_interior"    -> (s , h {_iloopMM = arr}   )
+            | t == "mismatch_interior_1n" -> (s , h {_iloop1xnMM = arr})
+            | t == "mismatch_interior_23" -> (s , h {_iloop2x3MM = arr})
+            | t == "mismatch_multi"       -> (s , h {_multiMM = arr}   )
+            | t == "mismatch_exterior"    -> (s , h {_exteriorMM = arr})
+          BlockPB t Entropy arr
+            | t == "dangle5" -> (s {_dangle5 = arr}, h )
+            | t == "dangle3" -> (s {_dangle3 = arr}, h )
+          BlockPB t Enthalpy arr
+            | t == "dangle5" -> (s , h {_dangle5 = arr})
+            | t == "dangle3" -> (s , h {_dangle3 = arr})
+          BlockPPBB t Entropy arr
+            | t == "int11" -> (s {_iloop1x1 = arr}, h )
+          BlockPPBB t Enthalpy arr
+            | t == "int11" -> (s , h {_iloop1x1 = arr})
+          BlockPPBBB t Entropy arr
+            | t == "int21" -> (s {_iloop2x1 = arr}, h )
+          BlockPPBBB t Enthalpy arr
+            | t == "int21" -> (s , h {_iloop2x1 = arr})
+          BlockPPBBBB t Entropy arr
+            | t == "int22" -> (s {_iloop2x2 = arr}, h )
+          BlockPPBBBB t Enthalpy arr
+            | t == "int22" -> (s , h {_iloop2x2 = arr})
+          BlockLinear t Entropy arr
+            | t == "hairpin"  -> (s {_hairpinL = arr} , h)
+            | t == "bulge"    -> (s {_bulgeL = arr} , h)
+            | t == "interior" -> (s {_bulgeL = arr} , h)
+          BlockLinear t Enthalpy arr
+            | t == "hairpin"  -> (s , h {_hairpinL = arr})
+            | t == "bulge"    -> (s , h {_bulgeL = arr})
+            | t == "interior" -> (s , h {_bulgeL = arr})
+          unknown       -> error $ "blocksToTurner: unknown " ++ show unknown
 
 -- | Blocks have different arrays. The block parser will switch into the
 -- corresponding parser where necessary.
@@ -44,8 +91,10 @@ data Block
   | BlockNinio  Text DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs
   | BlockMisc   Text DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs
   | BlockLoops  Text    (Map (Primary RNA) (DeltaDekaGibbs,DeltaDekaGibbs))
+  deriving (Show)
 
-data EE = Entropy | Enthalpie
+data EE = Entropy | Enthalpy
+  deriving (Show)
 
 type Arr i = Unboxed i DeltaDekaGibbs
 
@@ -144,7 +193,7 @@ wrapBlock block blockHeader convert
 
 headerParser :: [Text] -> Parser (Text,EE)
 headerParser ps = choice [try $ (,) <$ text "#" <* whiteSpace <*> text p <*> pEE | p <- ps]
-  where pEE = (Entropy <$ newline) <|> (Enthalpie <$ text "_enthalpies" <* newline)
+  where pEE = (Entropy <$ newline) <|> (Enthalpy <$ text "_enthalpies" <* newline)
 
 arrayLines :: Parser [DeltaDekaGibbs]
 arrayLines = do

@@ -72,6 +72,7 @@ library
                     , FlexibleContexts
                     , GADTs
                     , GeneralizedNewtypeDeriving
+                    , LambdaCase
                     , MultiParamTypeClasses
                     , NoMonomorphismRestriction
                     , OverloadedStrings

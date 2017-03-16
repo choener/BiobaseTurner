@@ -123,21 +123,6 @@ fromDir fp prefix suffix = do
     , _intermolecularInit = DG . L.head $ imisc' !! 12
     }
 
-minPP     = Z:.N:.N:.N:.N -- (minP,minP)
-maxPP     = Z:.U:.U:.U:.U -- (maxP,maxP)
-minP      = Z:.N:.N -- (nN,nN)
-maxP      = Z:.U:.U -- (nU,nU)
-minPB     = minP:.N -- (minP,nN)
-maxPB     = maxP:.U -- (maxP,nU)
-minPBB    = minPB:.N -- (minP,nN,nN)
-maxPBB    = maxPB:.U -- (maxP,nU,nU)
-minPPBB   = minPP:.N:.N -- (minP,minP,(nN,nN))
-maxPPBB   = maxPP:.U:.U -- (maxP,maxP,(nU,nU))
-minPPBBB  = minPPBB:.N -- (minP,minP,(nN,nN,nN))
-maxPPBBB  = maxPPBB:.U -- (maxP,maxP,(nU,nU,nU))
-minPPBBBB = minPPBBB:.N -- (minP,minP,(nN,nN,nN,nN))
-maxPPBBBB = maxPPBBB:.U -- (maxP,maxP,(nU,nU,nU,nU))
-
 d1_30 = L.map (Z:.) [1..30]
 
 keysPP     = [{- ((k1,k2),(k4,k3)) -} Z:.k1:.k2:.k4:.k3 | k1 <- acgu, k3 <- acgu, k2 <- acgu, k4 <- acgu]

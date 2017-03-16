@@ -62,7 +62,7 @@ data Turner2004Model e = Turner2004Model
   , _multiHelix         :: !e
   , _multiAsym          :: !e
   , _multiStrain        :: !e
-  , _extMM              :: !(Unboxed PNN e)
+  , _exteriorMM         :: !(Unboxed PNN e)
   , _coaxial            :: !(Unboxed PP e) -- no intervening unpaired nucleotides
   , _coaxStack          :: !(Unboxed PNN e)
   , _tStackCoax         :: !(Unboxed PNN e)
@@ -118,7 +118,7 @@ emap f Turner2004Model{..} = Turner2004Model
   , _multiHelix         = f _multiHelix
   , _multiAsym          = f _multiAsym
   , _multiStrain        = f _multiStrain
-  , _extMM              = PA.map f _extMM
+  , _exteriorMM              = PA.map f _exteriorMM
   , _coaxial            = PA.map f _coaxial
   , _coaxStack          = PA.map f _coaxStack
   , _tStackCoax         = PA.map f _tStackCoax
@@ -126,4 +126,59 @@ emap f Turner2004Model{..} = Turner2004Model
   , _termAU             = f _termAU
   , _intermolecularInit = f _intermolecularInit
   }
+
+-- | An empty model
+
+emptyModel :: (Default e, VU.Unbox e) => Turner2004Model e
+emptyModel = Turner2004Model
+  { _stack              = fromAssocs minPP minPP def []
+  , _dangle3            = fromAssocs minPB minPB def []
+  , _dangle5            = fromAssocs minPB minPB def []
+  , _hairpinL           = VU.empty
+  , _hairpinMM          = fromAssocs minPBB minPBB def []
+  , _hairpinLookup      = M.empty
+  , _hairpinGGG         = def
+  , _hairpinCslope      = def
+  , _hairpinCintercept  = def
+  , _hairpinC3          = def
+  , _bulgeL             = VU.empty
+  , _bulgeSingleC       = def
+  , _iloop1x1           = fromAssocs minPPBB minPPBB def []
+  , _iloop2x1           = fromAssocs minPPBBB minPPBBB def []
+  , _iloop2x2           = fromAssocs minPPBBBB minPPBBBB def []
+  , _iloopMM            = fromAssocs minPBB minPBB def []
+  , _iloop2x3MM         = fromAssocs minPBB minPBB def []
+  , _iloop1xnMM         = fromAssocs minPBB minPBB def []
+  , _iloopL             = VU.empty
+  , _multiMM            = fromAssocs minPBB minPBB def []
+  , _ninio              = def
+  , _maxNinio           = def
+  , _multiOffset        = def
+  , _multiNuc           = def
+  , _multiHelix         = def
+  , _multiAsym          = def
+  , _multiStrain        = def
+  , _exteriorMM         = fromAssocs minPBB minPBB def []
+  , _coaxial            = fromAssocs minPP minPP def []
+  , _coaxStack          = fromAssocs minPBB minPBB def []
+  , _tStackCoax         = fromAssocs minPBB minPBB def []
+  , _largeLoop          = def
+  , _termAU             = def
+  , _intermolecularInit = def
+  }
+
+minPP     = Z:.N:.N:.N:.N -- (minP,minP)
+maxPP     = Z:.U:.U:.U:.U -- (maxP,maxP)
+minP      = Z:.N:.N -- (nN,nN)
+maxP      = Z:.U:.U -- (nU,nU)
+minPB     = minP:.N -- (minP,nN)
+maxPB     = maxP:.U -- (maxP,nU)
+minPBB    = minPB:.N -- (minP,nN,nN)
+maxPBB    = maxPB:.U -- (maxP,nU,nU)
+minPPBB   = minPP:.N:.N -- (minP,minP,(nN,nN))
+maxPPBB   = maxPP:.U:.U -- (maxP,maxP,(nU,nU))
+minPPBBB  = minPPBB:.N -- (minP,minP,(nN,nN,nN))
+maxPPBBB  = maxPPBB:.U -- (maxP,maxP,(nU,nU,nU))
+minPPBBBB = minPPBBB:.N -- (minP,minP,(nN,nN,nN,nN))
+maxPPBBBB = maxPPBBB:.U -- (maxP,maxP,(nU,nU,nU,nU))
 
