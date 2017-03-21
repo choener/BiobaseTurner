@@ -12,6 +12,7 @@ import           Data.Text (Text,pack)
 import           Data.Vector.Unboxed (Vector,fromList)
 import qualified Data.Map.Strict as M
 import           Text.Trifecta as TT
+import           Data.Semigroup ((<>))
 
 import           Biobase.Primary (Primary,RNA,primary)
 import           Biobase.Turner.Types
@@ -74,6 +75,25 @@ blocksToTurner = foldl' go (emptyModel,emptyModel)
             | t == "hairpin"  -> (s , h {_hairpinL = arr})
             | t == "bulge"    -> (s , h {_bulgeL = arr})
             | t == "interior" -> (s , h {_bulgeL = arr})
+          -- | @u@ / @uh@ are unpaired nucleotides in the multibranched
+          -- loop, as entropy and enthalpy. @b@ / @bl@ are the base cost
+          -- for having a multibranched loop. @l@ / @lh@ are the gains for
+          -- each stem in the multibranched loop.
+          -- TODO write me
+          BlockML t u uh b bh l lh ->
+            (s , h)
+          -- | @n@ / @nh@ are the ninio correction, @mx@ the maximal ninio
+          -- correction
+          BlockNinio t n nh mx ->
+            (s {_ninio = n, _maxNinio = mx} , h {_ninio = nh})
+          -- | @d@ / @dh@ is the duplex initiation energy, @au@ / @auh@
+          -- is terminal-AU
+          BlockMisc t d dh au auh ->
+            (s {_termAU = au , _intermolecularInit = d }
+            ,h {_termAU = auh, _intermolecularInit = dh})
+          BlockLoops t rs ->
+            (s {_hairpinLookup = _hairpinLookup s <> M.map fst rs}
+            ,h {_hairpinLookup = _hairpinLookup h <> M.map snd rs})
           unknown       -> error $ "blocksToTurner: unknown " ++ show unknown
 
 -- | Blocks have different arrays. The block parser will switch into the
@@ -102,12 +122,15 @@ block :: Parser Block
 block =   blockPP <|> blockPBB <|> blockPB <|> blockPPBB <|> blockPPBBB <|> blockPPBBBB
       <|> blockLinear <|> blockML <|> blockNinio <|> blockMisc <|> blockLoops
 
+-- | TODO handling of @NN@ / non-standard base pairs?
+
 blockPP :: Parser Block
 blockPP = wrapBlock BlockPP blockHeader convertPP
   where convertPP vs = do
           let l = length vs
           guard (l == 7*7) <?> "expected 7*7=49 entries for blockPP but got " ++ show l
-          return $ fromAssocs minPP maxPP (DekaG 999999) [error "blockPP"]
+          return $ fromAssocs minPP maxPP (DekaG 999999)
+            [error $ "blockPP " ++ show vs]
         blockHeader = ["stack"]
 
 blockPBB :: Parser Block
