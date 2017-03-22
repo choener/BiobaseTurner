@@ -5,3 +5,6 @@ packages: .
 --          ../Lib-BiobaseXNA
 --          ../Lib-BiobaseTypes
 --          ../Lib-bimaps
+
+optional-packages: ./*/*.cabal
+

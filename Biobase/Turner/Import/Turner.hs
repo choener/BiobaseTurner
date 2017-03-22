@@ -51,6 +51,7 @@ import           Biobase.Primary
 import           Biobase.Primary.Letter
 import           Biobase.Primary.Nuc.RNA
 import           Biobase.Secondary
+import           Biobase.Secondary.Convert
 import           Biobase.Types.Energy
 import           Data.PrimitiveArray hiding (C, map)
 import qualified Biobase.Primary.Nuc.DNA as DNA
@@ -87,11 +88,11 @@ fromDir fp prefix suffix = do
   cstack'     <- blockFromFile $ fp </> prefix ++ "coaxstack" <.> suffix
   tstack'     <- blockFromFile $ fp </> prefix ++ "tstackcoax" <.> suffix
   return Turner2004Model
-    { _stack              = fromAssocs minPP  maxPP   def $ L.zip keysPP  stack'
-    , _dangle3            = fromAssocs minPB  maxPB   def $ L.zip keysPB  dangle3'
-    , _dangle5            = fromAssocs minPB  maxPB   def $ L.zip keysPB  dangle5'
+    { _stack              = fromAssocs minBPP  maxBPP   def $ L.zip keysPP  stack'
+    , _dangle3            = fromAssocs minBPB  maxBPB   def $ L.zip keysPB  dangle3'
+    , _dangle5            = fromAssocs minBPB  maxBPB   def $ L.zip keysPB  dangle5'
     , _hairpinL           = VU.fromList $ def : hairpinL' -- fromAssocs (Z:.0) (Z:.30) def $ L.zip d1_30 hairpinL'
-    , _hairpinMM          = fromAssocs minPBB maxPBB def $ L.zip keysPBB hairpinMM'
+    , _hairpinMM          = fromAssocs minBPBB maxBPBB def $ L.zip keysPBB hairpinMM'
     , _hairpinLookup      = M.fromList $ hairpinLk3 ++ hairpinLk4 ++ hairpinLk6
     , _hairpinGGG         = DG . L.head $ imisc' !! 8
     , _hairpinCslope      = DG . L.head $ imisc' !! 9
@@ -99,14 +100,14 @@ fromDir fp prefix suffix = do
     , _hairpinC3          = DG . L.head $ imisc' !! 11
     , _bulgeL             = VU.fromList $ def : bulgeL' -- fromAssocs (Z:.0)      (Z:.30)     def $ L.zip d1_30 bulgeL'
     , _bulgeSingleC       = DG . L.head $ imisc' !! 13
-    , _iloop1x1           = fromAssocs minPPBB   maxPPBB   def $ L.zip keysPPBB   iloop1x1'
-    , _iloop2x1           = fromAssocs minPPBBB  maxPPBBB  def $ L.zip keysPPBBB  iloop2x1'
-    , _iloop2x2           = fromAssocs minPPBBBB maxPPBBBB def $ L.zip keysPPBBBBrna iloop2x2' -- (if (prefix == "" || suffix == "dh") then keysPPBBBBrna else keysPPBBBBdna) iloop2x2'
-    , _iloopMM            = fromAssocs minPBB    maxPBB    def $ L.zip keysPBB    iloopMM'
-    , _iloop2x3MM         = fromAssocs minPBB    maxPBB    def $ L.zip keysPBB    iloop2x3MM'
-    , _iloop1xnMM         = fromAssocs minPBB    maxPBB    def $ L.zip keysPBB    iloop1xnMM'
+    , _iloop1x1           = fromAssocs minBPPBB   maxBPPBB   def $ L.zip keysPPBB   iloop1x1'
+    , _iloop2x1           = fromAssocs minBPPBBB  maxBPPBBB  def $ L.zip keysPPBBB  iloop2x1'
+    , _iloop2x2           = fromAssocs minBPPBBBB maxBPPBBBB def $ L.zip keysPPBBBBrna iloop2x2' -- (if (prefix == "" || suffix == "dh") then keysPPBBBBrna else keysPPBBBBdna) iloop2x2'
+    , _iloopMM            = fromAssocs minBPBB    maxBPBB    def $ L.zip keysPBB    iloopMM'
+    , _iloop2x3MM         = fromAssocs minBPBB    maxBPBB    def $ L.zip keysPBB    iloop2x3MM'
+    , _iloop1xnMM         = fromAssocs minBPBB    maxBPBB    def $ L.zip keysPBB    iloop1xnMM'
     , _iloopL             = VU.fromList $ def : iloopL' -- fromAssocs (Z:.0)    (Z:.30)   def $ L.zip d1_30      iloopL'
-    , _multiMM            = fromAssocs minPBB    maxPBB    def $ L.zip keysPBB    multiMM'
+    , _multiMM            = fromAssocs minBPBB    maxBPBB    def $ L.zip keysPBB    multiMM'
     , _ninio              = DG . L.head $ imisc' !! 2
     , _maxNinio           = DG . L.head $ imisc' !! 1
     , _multiOffset        = DG $ (imisc' !! 3) !! 0
@@ -114,10 +115,10 @@ fromDir fp prefix suffix = do
     , _multiHelix         = DG $ (imisc' !! 3) !! 2
     , _multiAsym          = DG . L.head $ imisc' !! 5
     , _multiStrain        = DG . L.head $ imisc' !! 6
-    , _exteriorMM         = fromAssocs minPBB maxPBB def $ L.zip keysPBB extMM'
-    , _coaxial            = fromAssocs minPP  maxPP  def $ L.zip keysPP  coaxial'
-    , _coaxStack          = fromAssocs minPBB maxPBB def $ L.zip keysPBB cstack'
-    , _tStackCoax         = fromAssocs minPBB maxPBB def $ L.zip keysPBB tstack'
+    , _exteriorMM         = fromAssocs minBPBB maxBPBB def $ L.zip keysPBB extMM'
+    , _coaxial            = fromAssocs minBPP  maxBPP  def $ L.zip keysPP  coaxial'
+    , _coaxStack          = fromAssocs minBPBB maxBPBB def $ L.zip keysPBB cstack'
+    , _tStackCoax         = fromAssocs minBPBB maxBPBB def $ L.zip keysPBB tstack'
     , _largeLoop          = DG . L.head $ imisc' !! 0
     , _termAU             = DG . L.head $ imisc' !! 7
     , _intermolecularInit = DG . L.head $ imisc' !! 12
@@ -125,18 +126,24 @@ fromDir fp prefix suffix = do
 
 d1_30 = L.map (Z:.) [1..30]
 
-keysPP     = [{- ((k1,k2),(k4,k3)) -} Z:.k1:.k2:.k4:.k3 | k1 <- acgu, k3 <- acgu, k2 <- acgu, k4 <- acgu]
-keysPB     = [{- ((k1,k2),k3) -} Z:.k1:.k2:.k3 | k1 <- acgu, k2 <- acgu, k3 <- acgu]
-keysPBB    = [ {- ((k1,k2),k3,k4) -} Z:.k1:.k2:.k3:.k4
+-- note that the unorder in the indices is intentional!
+
+keysPP     = [ Z:.basepairConvert (k1,k2):.basepairConvert(k4,k3)
              | k1 <- acgu, k3 <- acgu, k2 <- acgu, k4 <- acgu]
-keysPPBB   = [ {- ((k1,k2),(k4,k3),(k5,k6)) -} Z:.k1:.k2:.k4:.k3:.k5:.k6
+keysPB     = [ Z:.basepairConvert(k1,k2):.k3
+             | k1 <- acgu, k2 <- acgu, k3 <- acgu]
+keysPBB    = [ Z:.basepairConvert (k1,k2):.k3:.k4
+             | k1 <- acgu, k3 <- acgu, k2 <- acgu, k4 <- acgu]
+keysPPBB   = [ Z:.basepairConvert(k1,k2):.basepairConvert(k4,k3):.k5:.k6
              | (k1,k2) <- plist11, k5 <- acgu, (k3,k4) <- plist11, k6 <- acgu]
-keysPPBBB  = [ {- ((k1,k2),(k4,k3),(k5,k6,k7)) -} Z:.k1:.k2:.k4:.k3:.k5:.k6:.k7
+keysPPBBB  = [ Z:.basepairConvert(k1,k2):.basepairConvert(k4,k3):.k5:.k6:.k7
              | (k1,k2) <- plist11, k6 <- acgu, k5 <- acgu, (k3,k4) <- plist11, k7 <- acgu]
-keysPPBBBBrna = [ {- ((k1,k2),(k4,k3),(k5,k6,k7,k8)) -} Z:.k1:.k2:.k4:.k3:.k5:.k6:.k7:.k8
+keysPPBBBBrna = [ Z:.basepairConvert(k1,k2):.basepairConvert(k4,k3):.k5:.k6:.k7:.k8
                 | (k1,k2) <- plist22rna, (k3,k4) <- plist22rna, k5 <- acgu, k8 <- acgu, k6 <- acgu, k7 <- acgu]
-keysPPBBBBdna = [ {- ((k1,k2),(k4,k3),(k5,k6,k7,k8)) -} Z:.k1:.k2:.k4:.k3:.k5:.k6:.k7:.k8
+keysPPBBBBdna = [ Z:.basepairConvert(k1,k2):.basepairConvert(k4,k3):.k5:.k6:.k7:.k8
                 | (k1,k2) <- plist22dna, (k3,k4) <- plist22dna, k5 <- acgu, k8 <- acgu, k6 <- acgu, k7 <- acgu]
+
+fullps = [basepairConvert a b | a <- acgu, b <- acgu]
 
 plist11 = [(A,U),(C,G),(G,C),(U,A),(G,U),(U,G)]
 plist22rna = [(A,U),(C,G),(G,C),(G,U),(U,A),(U,G)]

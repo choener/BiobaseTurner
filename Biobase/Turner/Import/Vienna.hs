@@ -15,6 +15,8 @@ import           Text.Trifecta as TT
 import           Data.Semigroup ((<>))
 
 import           Biobase.Primary (Primary,RNA,primary)
+import           Biobase.Primary.Nuc.RNA
+import           Biobase.Secondary.Vienna
 import           Biobase.Turner.Types
 import           Biobase.Types.Energy
 
@@ -31,7 +33,7 @@ pVienna = v2Header *> spaces *> (blocksToTurner <$> some (block <* whiteSpace)) 
 -- | Run through the parsed blocks and insert into @Vienna 2004@ model.
 
 blocksToTurner :: [Block] -> (Vienna2004,Vienna2004)
-blocksToTurner = foldl' go (emptyModel,emptyModel)
+blocksToTurner = foldl' go (emptyViennaModel,emptyViennaModel)
   where go (s,h) = \case
           BlockPP "stack" Entropy  arr -> ( s {_stack = arr} , h )
           BlockPP "stack" Enthalpy arr -> ( s , h {_stack = arr} )
@@ -100,12 +102,12 @@ blocksToTurner = foldl' go (emptyModel,emptyModel)
 -- corresponding parser where necessary.
 
 data Block
-  = BlockPP     Text EE (Arr PP)
-  | BlockPBB    Text EE (Arr PNN)
-  | BlockPB     Text EE (Arr PN)
-  | BlockPPBB   Text EE (Arr PPNN)
-  | BlockPPBBB  Text EE (Arr PPNNN)
-  | BlockPPBBBB Text EE (Arr PPNNNN)
+  = BlockPP     Text EE (Arr VPP)
+  | BlockPBB    Text EE (Arr VPNN)
+  | BlockPB     Text EE (Arr VPN)
+  | BlockPPBB   Text EE (Arr VPPNN)
+  | BlockPPBBB  Text EE (Arr VPPNNN)
+  | BlockPPBBBB Text EE (Arr VPPNNNN)
   | BlockLinear Text EE (Vector DeltaDekaGibbs)
   | BlockML     Text DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs
   | BlockNinio  Text DeltaDekaGibbs DeltaDekaGibbs DeltaDekaGibbs
@@ -122,23 +124,32 @@ block :: Parser Block
 block =   blockPP <|> blockPBB <|> blockPB <|> blockPPBB <|> blockPPBBB <|> blockPPBBBB
       <|> blockLinear <|> blockML <|> blockNinio <|> blockMisc <|> blockLoops
 
--- | TODO handling of @NN@ / non-standard base pairs?
+-- | Parses a block of two stacked pairs.
 
 blockPP :: Parser Block
 blockPP = wrapBlock BlockPP blockHeader convertPP
   where convertPP vs = do
           let l = length vs
           guard (l == 7*7) <?> "expected 7*7=49 entries for blockPP but got " ++ show l
-          return $ fromAssocs minPP maxPP (DekaG 999999)
-            [error $ "blockPP " ++ show vs]
+          let rs = fromAssocs minVPP maxVPP (DekaG 999999)
+                 . guardLength l
+                 $ zip [ (Z:.a:.b) | a <- cgnsP, b <- cgnsP ] vs
+          error $ show $ assocs rs
+          return rs
         blockHeader = ["stack"]
+
+guardLength k xs
+  | k == length xs = xs
+  | otherwise      = error $ show "length xs /= k in: " ++ show k ++ " " ++ show xs
+
+acgun = [A,C,G,U,N]
 
 blockPBB :: Parser Block
 blockPBB = wrapBlock BlockPBB blockHeader convertPBB
   where convertPBB vs = do
           let l = length vs
           guard (l == 7*5*5) <?> "expected 7*5*5=175 entries for blockPBB but got " ++ show l
-          return $ fromAssocs minPBB maxPBB (DekaG 999999) [error "blockPBB"]
+          return $ fromAssocs minVPBB maxVPBB (DekaG 999999) [error "blockPBB"]
         blockHeader = ["mismatch_hairpin", "mismatch_interior", "mismatch_interior_1n", "mismatch_interior_23", "mismatch_multi", "mismatch_exterior"]
 
 blockPB :: Parser Block
@@ -146,7 +157,7 @@ blockPB = wrapBlock BlockPB blockHeader convertPB
   where convertPB vs = do
           let l = length vs
           guard (l == 7*5) <?> "7*5=35 entries for blockPB but got " ++ show l
-          return $ fromAssocs minPB maxPB (DekaG 999999) [error "blockPB"]
+          return $ fromAssocs minVPB maxVPB (DekaG 999999) [error "blockPB"]
         blockHeader = ["dangle5", "dangle3"]
 
 blockPPBB :: Parser Block
@@ -154,7 +165,7 @@ blockPPBB = wrapBlock BlockPPBB blockHeader convertPPBB
   where convertPPBB vs = do
           let l = length vs
           guard (l == 7*7*5*5) <?> "7*7*5*5=1225 entries for blockPPBB but got " ++ show l
-          return $ fromAssocs minPPBB maxPPBB (DekaG 999999) [error "blockPPBB"]
+          return $ fromAssocs minVPPBB maxVPPBB (DekaG 999999) [error "blockPPBB"]
         blockHeader = ["int11"]
 
 blockPPBBB :: Parser Block
@@ -162,7 +173,7 @@ blockPPBBB = wrapBlock BlockPPBBB blockHeader convertPPBBB
   where convertPPBBB vs = do
           let l = length vs
           guard (l == 7*7*5*5*5) <?> "7*7*5*5*5=6125 entries for blockPPBBB but got " ++ show l
-          return $ fromAssocs minPPBBB maxPPBBB (DekaG 999999) [error "blockPPBBB"]
+          return $ fromAssocs minVPPBBB maxVPPBBB (DekaG 999999) [error "blockPPBBB"]
         blockHeader = ["int21"]
 
 -- | Parses the big @int22@ lists. Excludes special characters and only
@@ -173,7 +184,7 @@ blockPPBBBB = wrapBlock BlockPPBBBB blockHeader convertPPBBBB
   where convertPPBBBB vs = do
           let l = length vs
           guard (l == 6*6*4*4*4*4) <?> "6*6*4*4*4*4=30625 entries for blockPPBBBB but got " ++ show l
-          return $ fromAssocs minPPBBBB maxPPBBBB (DekaG 999999) [error "blockPPBBBB"]
+          return $ fromAssocs minVPPBBBB maxVPPBBBB (DekaG 999999) [error "blockPPBBBB"]
         blockHeader = ["int22"]
 
 blockLinear :: Parser Block

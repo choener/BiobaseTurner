@@ -57,7 +57,7 @@ library
                , vector-th-unbox        >= 0.2
                --
                , BiobaseTypes           == 0.1.2.*
-               , BiobaseXNA             == 0.9.3.*
+               , BiobaseXNA             == 0.10.0.*
                , PrimitiveArray         == 0.8.0.*
   exposed-modules:
     Biobase.Turner
