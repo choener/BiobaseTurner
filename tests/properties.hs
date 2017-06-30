@@ -58,6 +58,14 @@ case_Vienna_RNA_table_stack = do
 case_Model_Vienna_eStack = do
   Just (e,p) ← viennaFromFile "./data/rna_turner2004.par"
   assertEqual "C A U G" (-210) $ eStack e C A U G
+  -- wc-sc-example.html
+  -- ~AGCGCU~AGCGCU~
+  -- ~[[[[[(~)]]]]]~
+  assertEqual "A G C U" (-210) $ eStack e A G C U
+  assertEqual "G C G C" (-340) $ eStack e G C G C
+  assertEqual "C G C G" (-240) $ eStack e C G C G
+  assertEqual "G C G C" (-340) $ eStack e G C G C
+  assertEqual "C U A G" (-210) $ eStack e C U A G
 
 -- * Tests of the Turner importer
 
