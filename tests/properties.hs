@@ -24,6 +24,7 @@ import Biobase.Primary.Nuc.RNA
 import Biobase.Secondary.Vienna
 
 import Biobase.Turner
+import Biobase.Turner.Model.Vienna
 
 
 
@@ -54,6 +55,9 @@ case_Vienna_RNA_table_stack = do
 -- * Make sure that the energy-calculating functions do the right thing.
 -- They accept input characters in one order and do the correct lookup.
 
+case_Model_Vienna_eStack = do
+  Just (e,p) ← viennaFromFile "./data/rna_turner2004.par"
+  assertEqual "C A U G" (-210) $ eStack e C A U G
 
 -- * Tests of the Turner importer
 
