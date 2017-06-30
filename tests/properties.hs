@@ -11,19 +11,51 @@ module Main where
 
 import Control.Lens
 import Data.Default
-import Test.QuickCheck.Modifiers
-import Test.QuickCheck.Property
+--import Test.QuickCheck.Modifiers
+--import Test.QuickCheck.Property
 import Test.Tasty
 import Test.Tasty.HUnit
-import Test.Tasty.QuickCheck
+--import Test.Tasty.QuickCheck
 import Test.Tasty.TH
+import Data.Maybe
 
 import Data.PrimitiveArray ( (!), Z(..), (:.)(..) )
 import Biobase.Primary.Nuc.RNA
+import Biobase.Secondary.Vienna
 
 import Biobase.Turner
 
 
+
+-- * Tests of the ViennaRNA importer
+
+-- | Make sure that we can parse successfully.
+
+case_Vienna_RNA_import = do
+  t ← viennaFromFile "./data/rna_turner2004.par"
+  assertBool "Import.Vienna parses successfully" $ isJust t
+
+
+
+-- * Make sure that the tables are filled according to the layout of the
+-- @.par@ file.
+
+-- | The stack table.
+
+case_Vienna_RNA_table_stack = do
+  Just (e,p) ← viennaFromFile "./data/rna_turner2004.par"
+  assertEqual "G-C N_S" (-150) $ (e ^. stack) ! (Z:.GC:.NS)
+  assertEqual "G-C G-C" (-340) $ (e ^. stack) ! (Z:.GC:.GC)
+  assertEqual "G-C G-U" (-250) $ (e ^. stack) ! (Z:.GC:.GU)
+  assertEqual "A-U A-U" (-110) $ (e ^. stack) ! (Z:.AU:.AU)
+
+
+
+-- * Make sure that the energy-calculating functions do the right thing.
+-- They accept input characters in one order and do the correct lookup.
+
+
+-- * Tests of the Turner importer
 
 --case_Turner_RNA_Energy_import_ = do
 --  t <- fromDir "/home/choener/Documents/Workdata/TurnerRNA2004/RNA" "" ".dat"

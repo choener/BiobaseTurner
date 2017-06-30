@@ -8,11 +8,12 @@ import           Control.Monad (guard)
 import           Data.List (foldl')
 import           Data.Map.Strict (Map)
 import           Data.PrimitiveArray as PA hiding (map,fromList)
+import           Data.Semigroup ((<>))
 import           Data.Text (Text,pack)
 import           Data.Vector.Unboxed (Vector,fromList)
 import qualified Data.Map.Strict as M
+import           Text.Printf
 import           Text.Trifecta as TT
-import           Data.Semigroup ((<>))
 
 import           Biobase.Primary (Primary,RNA,primary)
 import           Biobase.Primary.Nuc.RNA
@@ -21,6 +22,11 @@ import           Biobase.Turner.Types
 import           Biobase.Types.Energy
 
 
+
+-- |
+--
+-- TODO Use @parseFromFileEx@ and provide a function to display errors on
+-- the shell.
 
 fromFile :: FilePath -> IO (Maybe (Vienna2004,Vienna2004))
 fromFile = TT.parseFromFile pVienna
@@ -122,7 +128,7 @@ type Arr i = Unboxed i DeltaDekaGibbs
 
 block :: Parser Block
 block =   blockPP <|> blockPBB <|> blockPB <|> blockPPBB <|> blockPPBBB <|> blockPPBBBB
-      <|> blockLinear <|> blockML <|> blockNinio <|> blockMisc <|> blockLoops
+      <|> blockLinear <|> try blockML <|> try blockNinio <|> try blockMisc <|> blockLoops
 
 -- | Parses a block of two stacked pairs.
 
@@ -134,22 +140,29 @@ blockPP = wrapBlock BlockPP blockHeader convertPP
           let rs = fromAssocs minVPP maxVPP (DekaG 999999)
                  . guardLength l
                  $ zip [ (Z:.a:.b) | a <- cgnsP, b <- cgnsP ] vs
-          error $ show $ assocs rs
           return rs
         blockHeader = ["stack"]
 
 guardLength k xs
   | k == length xs = xs
-  | otherwise      = error $ show "length xs /= k in: " ++ show k ++ " " ++ show xs
+  | otherwise      = error $ printf "length xs /= %d in xs = %s" k $ show xs
 
 acgun = [A,C,G,U,N]
+nacgu = [N,A,C,G,U]
 
-blockPBB :: Parser Block
+-- TODO we might have to introduce @E@ ...
+eacgu = [N,A,C,G,U]
+
+blockPBB ∷ Parser Block
 blockPBB = wrapBlock BlockPBB blockHeader convertPBB
   where convertPBB vs = do
           let l = length vs
           guard (l == 7*5*5) <?> "expected 7*5*5=175 entries for blockPBB but got " ++ show l
-          return $ fromAssocs minVPBB maxVPBB (DekaG 999999) [error "blockPBB"]
+          let rs = fromAssocs minVPBB maxVPBB (DekaG 999999)
+                 . guardLength l
+                 $ zip [ Z:.p:.a:.b | p ← cgnsP -- the closing pair
+                       , a ← eacgu, b ← eacgu ] vs
+          return rs
         blockHeader = ["mismatch_hairpin", "mismatch_interior", "mismatch_interior_1n", "mismatch_interior_23", "mismatch_multi", "mismatch_exterior"]
 
 blockPB :: Parser Block
@@ -157,7 +170,10 @@ blockPB = wrapBlock BlockPB blockHeader convertPB
   where convertPB vs = do
           let l = length vs
           guard (l == 7*5) <?> "7*5=35 entries for blockPB but got " ++ show l
-          return $ fromAssocs minVPB maxVPB (DekaG 999999) [error "blockPB"]
+          let rs = fromAssocs minVPB maxVPB (DekaG 999999)
+                 . guardLength l
+                 $ zip [ Z:.p:.a | p ← cgnsP, a ← nacgu ] vs
+          return rs
         blockHeader = ["dangle5", "dangle3"]
 
 blockPPBB :: Parser Block
@@ -165,7 +181,11 @@ blockPPBB = wrapBlock BlockPPBB blockHeader convertPPBB
   where convertPPBB vs = do
           let l = length vs
           guard (l == 7*7*5*5) <?> "7*7*5*5=1225 entries for blockPPBB but got " ++ show l
-          return $ fromAssocs minVPPBB maxVPPBB (DekaG 999999) [error "blockPPBB"]
+          let rs = fromAssocs minVPPBB maxVPPBB (DekaG 999999)
+                 . guardLength l
+                 $ zip [ Z:.p:.q:.a:.b | p ← cgnsP, q ← cgnsP
+                       , a ← nacgu, b ← nacgu ] vs
+          return rs
         blockHeader = ["int11"]
 
 blockPPBBB :: Parser Block
@@ -173,7 +193,11 @@ blockPPBBB = wrapBlock BlockPPBBB blockHeader convertPPBBB
   where convertPPBBB vs = do
           let l = length vs
           guard (l == 7*7*5*5*5) <?> "7*7*5*5*5=6125 entries for blockPPBBB but got " ++ show l
-          return $ fromAssocs minVPPBBB maxVPPBBB (DekaG 999999) [error "blockPPBBB"]
+          let rs = fromAssocs minVPPBBB maxVPPBBB (DekaG 999999)
+                 . guardLength l
+                 $ zip [ Z:.p:.q:.a:.b:.c | p ← cgnsP, q ← cgnsP
+                       , a ← nacgu, b ← nacgu, c ← nacgu ] vs
+          return rs
         blockHeader = ["int21"]
 
 -- | Parses the big @int22@ lists. Excludes special characters and only
@@ -184,7 +208,11 @@ blockPPBBBB = wrapBlock BlockPPBBBB blockHeader convertPPBBBB
   where convertPPBBBB vs = do
           let l = length vs
           guard (l == 6*6*4*4*4*4) <?> "6*6*4*4*4*4=30625 entries for blockPPBBBB but got " ++ show l
-          return $ fromAssocs minVPPBBBB maxVPPBBBB (DekaG 999999) [error "blockPPBBBB"]
+          let rs = fromAssocs minVPPBBBB maxVPPBBBB (DekaG 999999)
+                 . guardLength l
+                 $ zip [ Z:.p:.q:.a:.b:.c:.d | p ← cguaP, q ← cguaP
+                       , a ← acgu, b ← acgu, c ← acgu, d ← acgu ] vs
+          return rs
         blockHeader = ["int22"]
 
 blockLinear :: Parser Block
@@ -196,15 +224,15 @@ blockLinear = wrapBlock BlockLinear blockHeader convertLinear
         blockHeader = ["hairpin", "bulge", "interior"]
 
 blockML :: Parser Block
-blockML = BlockML <$> (try $ id <$ text "# " <*> text "ML_params" <* newline)
+blockML = BlockML <$  text "# " <*> text "ML_params" <* newline
                   <*> ddg <*> ddg <*> ddg <*> ddg <*> ddg <*> ddg
 
 blockNinio :: Parser Block
-blockNinio = BlockNinio <$> (try $ id <$ text "# " <*> text "NINIO" <* newline)
+blockNinio = BlockNinio <$  text "# " <*> text "NINIO" <* newline
                         <*> ddg <*> ddg <*> ddg
 
 blockMisc :: Parser Block
-blockMisc = BlockMisc <$> (try $ id <$ text "# " <*> text "Misc" <* newline)
+blockMisc = BlockMisc <$  text "# " <*> text "Misc" <* newline
                       <*> ddg <*> ddg <*> ddg <*> ddg
 
 blockLoops :: Parser Block
