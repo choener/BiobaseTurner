@@ -1,13 +1,16 @@
 
 module Biobase.Turner.Model.Vienna where
 
-import Data.PrimitiveArray
+import qualified Data.Vector.Generic as VG
+import qualified Data.Map.Strict as MS
 
-import Biobase.Secondary.Vienna
-import Biobase.Primary.Nuc.RNA
-import Biobase.Primary.Letter
-import Biobase.Types.Energy
-import Biobase.Turner.Types
+import           Data.PrimitiveArray
+
+import           Biobase.Primary.Letter
+import           Biobase.Primary.Nuc.RNA
+import           Biobase.Secondary.Vienna
+import           Biobase.Turner.Types
+import           Biobase.Types.Energy
 
 
 
@@ -23,4 +26,41 @@ eStack Turner2004Model{..} l lp rp r =
       q = viennaPairTable ! (Z:.rp:.lp)
   in  _stack ! (Z:.p:.q)
 {-# Inline eStack #-}
+
+-- | The energy of a hairpin.
+--
+-- TODO check if @lenE@ is correct for hairpin >= 30.
+--
+-- TODO this is currently a somewhat simplified model not following the
+-- @NNDB@ exactly.
+
+eHairpin ∷ Vienna2004 → Letter RNA → Vector (Letter RNA) → Letter RNA → DeltaDekaGibbs
+eHairpin Turner2004Model{..} l us r
+  -- disallow small loops
+  | VG.length us < 3
+  = DekaG 999999
+  -- look up special loops
+  | Just e ← MS.lookup lusr _hairpinLookup
+  = e
+  -- special case of loops with length 3
+  | VG.length us == 3
+  = mmE + lenE + tAUE
+  -- standard loops of no special case
+  -- TODO missing special closures, as defined in the @NNDB@
+  | otherwise
+  = mmE + lenE + tAUE
+  where lusr = VG.snoc (VG.cons ll us) rr
+        allC = VG.all (==C) us
+        ll   = VG.unsafeHead us
+        rr   = VG.unsafeLast us
+        p    = viennaPairTable ! (Z:.l:.r)
+        mmE  = _hairpinMM ! (Z:.p:.ll:.rr)
+        lenE = maybe lrgE
+               id
+             $ _hairpinL VG.!? VG.length us
+        lrgE = (_hairpinL VG.! 30) + (DekaG . round
+             . (*) (fromIntegral . getDekaG $ _largeLoop)
+             . log . fromIntegral $ VG.length us)
+        tAUE = if p == AU then _termAU else 0
+{-# Inline eHairpin #-}
 
