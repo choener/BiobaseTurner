@@ -1,10 +1,4 @@
 packages: .
---          ../Lib-PrimitiveArray
---          ../Lib-OrderedBits
---          ../Lib-DPutils
---          ../Lib-BiobaseXNA
---          ../Lib-BiobaseTypes
---          ../Lib-bimaps
 
 optional-packages: ./*/*.cabal
 
