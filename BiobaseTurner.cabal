@@ -63,9 +63,9 @@ library
                , vector                 >= 0.10
                , vector-th-unbox        >= 0.2
                --
-               , BiobaseTypes           == 0.1.2.*
+               , BiobaseTypes           == 0.1.3.*
                , BiobaseXNA             == 0.10.0.*
-               , PrimitiveArray         == 0.8.0.*
+               , PrimitiveArray         == 0.9.0.*
   exposed-modules:
     Biobase.Turner
     Biobase.Turner.Default.RNA2004
