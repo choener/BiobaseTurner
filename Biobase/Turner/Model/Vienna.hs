@@ -1,8 +1,9 @@
 
 module Biobase.Turner.Model.Vienna where
 
-import qualified Data.Vector.Generic as VG
+import           Data.Vector.Unboxed (Unbox)
 import qualified Data.Map.Strict as MS
+import qualified Data.Vector.Generic as VG
 
 import           Data.PrimitiveArray
 
@@ -19,11 +20,21 @@ import           Biobase.Types.Energy
 -- @eStack C A U G@. The two outer characters @C - G@ are forming the new
 -- pair on the stack, while the two inner characters @A - U@ form the old
 -- pair on which to stack.
+--
+-- TODO check if @f@ is completely inlined. It is typically @\a b → pairTable ! (Z:.a:.b)@
 
-eStack ∷ Vienna2004 → Letter RNA → Letter RNA → Letter RNA → Letter RNA → DeltaDekaGibbs
-eStack Turner2004Model{..} l lp rp r =
-  let p = viennaPairTable ! (Z:.l:.r)
-      q = viennaPairTable ! (Z:.rp:.lp)
+eStack
+  ∷ (Index p, Unbox e)
+  ⇒ (Letter u → Letter u → p)
+  → Turner2004Model p u e
+  → Letter u
+  → Letter u
+  → Letter u
+  → Letter u
+  → e
+eStack f Turner2004Model{..} l lp rp r =
+  let p = f l r
+      q = f rp lp
   in  _stack ! (Z:.p:.q)
 {-# Inline eStack #-}
 
@@ -34,11 +45,18 @@ eStack Turner2004Model{..} l lp rp r =
 -- TODO this is currently a somewhat simplified model not following the
 -- @NNDB@ exactly.
 
-eHairpin ∷ Vienna2004 → Letter RNA → Vector (Letter RNA) → Letter RNA → DeltaDekaGibbs
-eHairpin Turner2004Model{..} l us r
+eHairpin
+  ∷ ()
+  ⇒ (Letter u → Letter u → p)
+  → Turner2004Model p u e
+  → Letter u
+  → Vector (Letter u)
+  → Letter u
+  → e
+eHairpin f Turner2004Model{..} l us r
   -- disallow small loops
   | VG.length us < 3
-  = DekaG 999999
+  = error "should return the worst semigroup element"
   -- look up special loops
   | Just e ← MS.lookup lusr _hairpinLookup
   = e

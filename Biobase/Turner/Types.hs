@@ -1,4 +1,7 @@
 
+-- | This module defines the @Turner 2004@ energy model data structure. The
+-- model is composed of a large number of "lookup tables" which hold the
+-- energies for different "loops".
 --
 -- TODO need a "Functor" instance over elements "e". Or alternatively, generic
 -- programming to capture stuff going on in 'e'
@@ -31,49 +34,39 @@ import qualified Biobase.Secondary.Vienna as SV
 
 -- | The Turner model with 'Energy's.
 
-type Turner2004 = Turner2004Model Basepair DeltaGibbs
+type Turner2004 = Turner2004Model Basepair DG
 
-type Vienna2004 = Turner2004Model ViennaPair DeltaDekaGibbs
+type Vienna2004 = Turner2004Model ViennaPair DDG
+
+type PU p u = Z:.p:.u
+type PP p   = Z:.p:.p
+type PUU p u = PU p u :.u
+type PPUU p u = PP p:.u:.u
+type PPU3 p u = PPUU p u:.u
+type PPU4 p u = PPU3 p u:.u
 
 -- | The Turner energy tables. Parametrized over the actual element type
 -- 'e'.
 
-data Turner2004Model p e = Turner2004Model
-  { _stack              :: !(Unboxed (Z:.p:.p) e)
-  , _dangle3            :: !(Unboxed (Z:.p:.N) e)
-  , _dangle5            :: !(Unboxed (Z:.p:.N) e)
-  , _hairpinL           :: !(Vector e)
-  , _hairpinMM          :: !(Unboxed (Z:.p:.N:.N) e)
-  , _hairpinLookup      :: !(M.Map (Primary RNA) e)
-  , _hairpinGGG         :: !e
-  , _hairpinCslope      :: !e
-  , _hairpinCintercept  :: !e
-  , _hairpinC3          :: !e
-  , _bulgeL             :: !(Vector e)
-  , _bulgeSingleC       :: !e
-  , _iloop1x1           :: !(Unboxed (Z:.p:.p:.N:.N) e)
-  , _iloop2x1           :: !(Unboxed (Z:.p:.p:.N:.N:.N) e)
-  , _iloop2x2           :: !(Unboxed (Z:.p:.p:.N:.N:.N:.N) e)
-  , _iloopMM            :: !(Unboxed (Z:.p:.N:.N) e)
-  , _iloop2x3MM         :: !(Unboxed (Z:.p:.N:.N) e)
-  , _iloop1xnMM         :: !(Unboxed (Z:.p:.N:.N) e)
-  , _iloopL             :: !(Vector e)
-  , _multiMM            :: !(Unboxed (Z:.p:.N:.N) e)
-  , _ninio              :: !e
-  , _maxNinio           :: !e
-  , _multiOffset        :: !e
-  , _multiNuc           :: !e
-  , _multiHelix         :: !e
-  , _multiAsym          :: !e
-  , _multiStrain        :: !e
-  , _exteriorMM         :: !(Unboxed (Z:.p:.N:.N) e)
-  , _coaxial            :: !(Unboxed (Z:.p:.p) e) -- no intervening unpaired nucleotides
-  , _coaxStack          :: !(Unboxed (Z:.p:.N:.N) e)
-  , _tStackCoax         :: !(Unboxed (Z:.p:.N:.N) e)
-  , _largeLoop          :: !e
-  , _termAU             :: !e
-  , _intermolecularInit :: !e
-  } deriving (Show,Generic)
+data Turner2004Model p u e = Turner2004Model
+  { _stack, _coaxial    ∷ !(Unboxed (PP p) e)
+  , _dangle3, _dangle5  ∷ !(Unboxed (PU p u) e)
+  , _hairpinL           ∷ !(Vector e)
+  , _hairpinMM          ∷ !(Unboxed (Z:.p:.u:.u) e)
+  , _hairpinLookup      ∷ !(M.Map (Primary u) e)
+  , _hairpinGGG         ∷ !e
+  , _hairpinCslope      ∷ !e
+  , _hairpinCintercept  ∷ !e
+  , _hairpinC3          ∷ !e
+  , _bulgeL             ∷ !(Vector e)
+  , _bulgeSingleC       ∷ !e
+  , _iloop1x1           ∷ !(Unboxed (PPUU p u) e)
+  , _iloop2x1           ∷ !(Unboxed (PPU3 p u) e)
+  , _iloop2x2           ∷ !(Unboxed (PPU4 p u) e)
+  , _iloopL             ∷ !(Vector e)
+  , _iloopMM, _iloop2x3MM, _iloop1xnMM, _multiMM, _exteriorMM, _coaxStack, _tStackCoax ∷ !(Unboxed (PUU p u) e)
+  , _ninio, _maxNinio, _multiOffset, _multiNuc, _multiHelix, _multiAsym, _multiStrain, _largeLoop, _termAU, _intermolecularInit ∷ !e
+  } deriving (Generic)
 
 type N = Letter RNA
 
@@ -94,16 +87,24 @@ type VPPNNNN = VPPNNN:.Letter RNA
 
 makeLenses ''Turner2004Model
 
-instance (Binary p, VU.Unbox e, Binary e                                        ) => Binary    (Turner2004Model p e)
-instance (Serialize p, VU.Unbox e, Serialize e                                  ) => Serialize (Turner2004Model p e)
-instance (FromJSON p, VU.Unbox e, FromJSON e , FromJSON (M.Map (Primary RNA) e) ) => FromJSON  (Turner2004Model p e)
-instance (ToJSON p, VU.Unbox e, ToJSON e   , ToJSON   (M.Map (Primary RNA) e)   ) => ToJSON    (Turner2004Model p e)
+--instance (Binary p, VU.Unbox e, Binary e                                        ) => Binary    (Turner2004Model p e)
+--instance (Serialize p, VU.Unbox e, Serialize e                                  ) => Serialize (Turner2004Model p e)
+--instance (FromJSON p, VU.Unbox e, FromJSON e , FromJSON (M.Map (Primary RNA) e) ) => FromJSON  (Turner2004Model p e)
+--instance (ToJSON p, VU.Unbox e, ToJSON e   , ToJSON   (M.Map (Primary RNA) e)   ) => ToJSON    (Turner2004Model p e)
 
 
 
 -- | Map a function over all 'e' elements.
 
-emap :: (PA.Index p, VU.Unbox e, VU.Unbox e') => (e -> e') -> Turner2004Model p e -> Turner2004Model p e'
+emap
+  ∷ (PA.Index p, PA.Index u, VU.Unbox e, VU.Unbox e')
+  ⇒ (e → e')
+  -- ^ conversion of "energies" @e@ to @e'@ with potentially different type.
+  -- the @e@'s could very well be probabilities.
+  → Turner2004Model p u e
+  -- the input turner model. We may not change the paired @p@ or unpaired @u@
+  -- types, only @e@ with 'emap'.
+  → Turner2004Model p u e'
 emap f Turner2004Model{..} = Turner2004Model
   { _stack              = PA.map f _stack
   , _dangle3            = PA.map f _dangle3
@@ -143,13 +144,14 @@ emap f Turner2004Model{..} = Turner2004Model
 
 -- | An empty model
 
+{-
 emptyTurnerModel :: (Default e, VU.Unbox e) => Turner2004Model Basepair e
 emptyTurnerModel = Turner2004Model
-  { _stack              = fromAssocs minBPP minBPP def []
-  , _dangle3            = fromAssocs minBPB minBPB def []
-  , _dangle5            = fromAssocs minBPB minBPB def []
+  { _stack              = fromAssocs minBPP def []
+  , _dangle3            = fromAssocs minBPB def []
+  , _dangle5            = fromAssocs minBPB def []
   , _hairpinL           = VU.empty
-  , _hairpinMM          = fromAssocs minBPBB minBPBB def []
+  , _hairpinMM          = fromAssocs minBPBB def []
   , _hairpinLookup      = M.empty
   , _hairpinGGG         = def
   , _hairpinCslope      = def
@@ -157,14 +159,14 @@ emptyTurnerModel = Turner2004Model
   , _hairpinC3          = def
   , _bulgeL             = VU.empty
   , _bulgeSingleC       = def
-  , _iloop1x1           = fromAssocs minBPPBB minBPPBB def []
-  , _iloop2x1           = fromAssocs minBPPBBB minBPPBBB def []
-  , _iloop2x2           = fromAssocs minBPPBBBB minBPPBBBB def []
-  , _iloopMM            = fromAssocs minBPBB minBPBB def []
-  , _iloop2x3MM         = fromAssocs minBPBB minBPBB def []
-  , _iloop1xnMM         = fromAssocs minBPBB minBPBB def []
+  , _iloop1x1           = fromAssocs minBPPBB def []
+  , _iloop2x1           = fromAssocs minBPPBBB def []
+  , _iloop2x2           = fromAssocs minBPPBBBB def []
+  , _iloopMM            = fromAssocs minBPBB def []
+  , _iloop2x3MM         = fromAssocs minBPBB def []
+  , _iloop1xnMM         = fromAssocs minBPBB def []
   , _iloopL             = VU.empty
-  , _multiMM            = fromAssocs minBPBB minBPBB def []
+  , _multiMM            = fromAssocs minBPBB def []
   , _ninio              = def
   , _maxNinio           = def
   , _multiOffset        = def
@@ -172,10 +174,10 @@ emptyTurnerModel = Turner2004Model
   , _multiHelix         = def
   , _multiAsym          = def
   , _multiStrain        = def
-  , _exteriorMM         = fromAssocs minBPBB minBPBB def []
-  , _coaxial            = fromAssocs minBPP minBPP def []
-  , _coaxStack          = fromAssocs minBPBB minBPBB def []
-  , _tStackCoax         = fromAssocs minBPBB minBPBB def []
+  , _exteriorMM         = fromAssocs minBPBB def []
+  , _coaxial            = fromAssocs minBPP def []
+  , _coaxStack          = fromAssocs minBPBB def []
+  , _tStackCoax         = fromAssocs minBPBB def []
   , _largeLoop          = def
   , _termAU             = def
   , _intermolecularInit = def
@@ -183,11 +185,11 @@ emptyTurnerModel = Turner2004Model
 
 emptyViennaModel :: (Default e, VU.Unbox e) => Turner2004Model ViennaPair e
 emptyViennaModel = Turner2004Model
-  { _stack              = fromAssocs minVPP minVPP def []
-  , _dangle3            = fromAssocs minVPB minVPB def []
-  , _dangle5            = fromAssocs minVPB minVPB def []
+  { _stack              = fromAssocs minVPP def []
+  , _dangle3            = fromAssocs minVPB def []
+  , _dangle5            = fromAssocs minVPB def []
   , _hairpinL           = VU.empty
-  , _hairpinMM          = fromAssocs minVPBB minVPBB def []
+  , _hairpinMM          = fromAssocs minVPBB def []
   , _hairpinLookup      = M.empty
   , _hairpinGGG         = def
   , _hairpinCslope      = def
@@ -195,14 +197,14 @@ emptyViennaModel = Turner2004Model
   , _hairpinC3          = def
   , _bulgeL             = VU.empty
   , _bulgeSingleC       = def
-  , _iloop1x1           = fromAssocs minVPPBB minVPPBB def []
-  , _iloop2x1           = fromAssocs minVPPBBB minVPPBBB def []
-  , _iloop2x2           = fromAssocs minVPPBBBB minVPPBBBB def []
-  , _iloopMM            = fromAssocs minVPBB minVPBB def []
-  , _iloop2x3MM         = fromAssocs minVPBB minVPBB def []
-  , _iloop1xnMM         = fromAssocs minVPBB minVPBB def []
+  , _iloop1x1           = fromAssocs minVPPBB def []
+  , _iloop2x1           = fromAssocs minVPPBBB def []
+  , _iloop2x2           = fromAssocs minVPPBBBB def []
+  , _iloopMM            = fromAssocs minVPBB def []
+  , _iloop2x3MM         = fromAssocs minVPBB def []
+  , _iloop1xnMM         = fromAssocs minVPBB def []
   , _iloopL             = VU.empty
-  , _multiMM            = fromAssocs minVPBB minVPBB def []
+  , _multiMM            = fromAssocs minVPBB def []
   , _ninio              = def
   , _maxNinio           = def
   , _multiOffset        = def
@@ -210,14 +212,15 @@ emptyViennaModel = Turner2004Model
   , _multiHelix         = def
   , _multiAsym          = def
   , _multiStrain        = def
-  , _exteriorMM         = fromAssocs minVPBB minVPBB def []
-  , _coaxial            = fromAssocs minVPP minVPP def []
-  , _coaxStack          = fromAssocs minVPBB minVPBB def []
-  , _tStackCoax         = fromAssocs minVPBB minVPBB def []
+  , _exteriorMM         = fromAssocs minVPBB def []
+  , _coaxial            = fromAssocs minVPP def []
+  , _coaxStack          = fromAssocs minVPBB def []
+  , _tStackCoax         = fromAssocs minVPBB def []
   , _largeLoop          = def
   , _termAU             = def
   , _intermolecularInit = def
   }
+-}
 
 minBPP     = Z:.SB.AA:.SB.AA
 maxBPP     = Z:.SB.NS:.SB.NS
