@@ -79,6 +79,7 @@ library
   default-extensions: BangPatterns
                     , DeriveGeneric
                     , FlexibleContexts
+                    , FlexibleInstances
                     , GADTs
                     , GeneralizedNewtypeDeriving
                     , LambdaCase
@@ -86,6 +87,7 @@ library
                     , NoMonomorphismRestriction
                     , OverloadedStrings
                     , PatternGuards
+                    , RankNTypes
                     , RecordWildCards
                     , StandaloneDeriving
                     , TemplateHaskell

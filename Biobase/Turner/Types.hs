@@ -32,18 +32,34 @@ import qualified Biobase.Secondary.Vienna as SV
 
 
 
--- | The Turner model with 'Energy's.
+-- | The @One@ loop or @Hairpin@. Should be monomeric.
+--
+-- @
+-- 5'  ...PL...RQ...  3'
+--        (.....)
+-- @
 
-type Turner2004 = Turner2004Model Basepair DG
+data OneLoop u e = OneLoop
+  { _hairpinL           ∷ !(Vector e)
+    -- ^ Contribution of the length of the unpaired region
+  , _hairpinMM          ∷ !(Unboxed (Z:.u:.u:.u:.u) e)
+    -- ^ The last match to first mismatch contribution. First the 5'-3' pair,
+    -- then the 5', then 3' unpaired nucleotides.
+  , _hairpinLookup      ∷ !(M.Map (VU.Vector u) e)
+  , _hairpinGGG         ∷ !e
+  , _hairpinCslope      ∷ !e
+  , _hairpinCintercept  ∷ !e
+  , _hairpinC3          ∷ !e
+  , _hairpinTermAU      ∷ !(u → u → e)
+  }
+  deriving (Generic)
+makeLenses ''OneLoop
 
-type Vienna2004 = Turner2004Model ViennaPair DDG
 
-type PU p u = Z:.p:.u
-type PP p   = Z:.p:.p
-type PUU p u = PU p u :.u
-type PPUU p u = PP p:.u:.u
-type PPU3 p u = PPUU p u:.u
-type PPU4 p u = PPU3 p u:.u
+
+{-
+
+-- * The actual Turner energy tables.
 
 -- | The Turner energy tables. Parametrized over the actual element type
 -- 'e'.
@@ -51,13 +67,6 @@ type PPU4 p u = PPU3 p u:.u
 data Turner2004Model p u e = Turner2004Model
   { _stack, _coaxial    ∷ !(Unboxed (PP p) e)
   , _dangle3, _dangle5  ∷ !(Unboxed (PU p u) e)
-  , _hairpinL           ∷ !(Vector e)
-  , _hairpinMM          ∷ !(Unboxed (Z:.p:.u:.u) e)
-  , _hairpinLookup      ∷ !(M.Map (Primary u) e)
-  , _hairpinGGG         ∷ !e
-  , _hairpinCslope      ∷ !e
-  , _hairpinCintercept  ∷ !e
-  , _hairpinC3          ∷ !e
   , _bulgeL             ∷ !(Vector e)
   , _bulgeSingleC       ∷ !e
   , _iloop1x1           ∷ !(Unboxed (PPUU p u) e)
@@ -97,7 +106,11 @@ makeLenses ''Turner2004Model
 -- | Map a function over all 'e' elements.
 
 emap
-  ∷ (PA.Index p, PA.Index u, VU.Unbox e, VU.Unbox e')
+  ∷ ( PA.Index p, PA.Index u
+    , PA.Index (PP p)
+    , PA.Index (PU p u), PA.Index (PUU p u), PA.Index (PPUU p u), PA.Index (PPU3 p u), PA.Index (PPU4 p u)
+    , VU.Unbox e, VU.Unbox e'
+    )
   ⇒ (e → e')
   -- ^ conversion of "energies" @e@ to @e'@ with potentially different type.
   -- the @e@'s could very well be probabilities.
@@ -141,6 +154,8 @@ emap f Turner2004Model{..} = Turner2004Model
   , _termAU             = f _termAU
   , _intermolecularInit = f _intermolecularInit
   }
+-}
+
 
 -- | An empty model
 
