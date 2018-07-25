@@ -63,17 +63,17 @@ eHairpin OneLoop{..} xs
   = e
   -- special case of loops with length 3
   | VG.length xs == 5
-  = mmE ⊗ lenE ⊗ tAUE
+  = mmE ⊗ lenE ⊗ term
   -- standard loops of no special case
   -- TODO missing special closures, as defined in the @NNDB@
   | otherwise
-  = mmE ⊗ lenE ⊗ tAUE
+  = mmE ⊗ lenE ⊗ term
   where n = VG.length xs
         p = VG.unsafeIndex xs 0
         l = VG.unsafeIndex xs 1
         r = VG.unsafeIndex xs (n-1)
         q = VG.unsafeIndex xs n
-        tAUE = _hairpinTermAU p q
+        term = _hairpinTerm ! (Z:.p:.q)
         mmE  = _hairpinMM ! (Z:.p:.q:.l:.r)
         lenE = maybe lrgE
                id

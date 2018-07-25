@@ -50,7 +50,7 @@ data OneLoop u e = OneLoop
   , _hairpinCslope      ∷ !e
   , _hairpinCintercept  ∷ !e
   , _hairpinC3          ∷ !e
-  , _hairpinTermAU      ∷ !(u → u → e)
+  , _hairpinTerm        ∷ !(Unboxed (Z:.u:.u) e)
   }
   deriving (Generic)
 makeLenses ''OneLoop
