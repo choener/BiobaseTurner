@@ -28,44 +28,44 @@ import Biobase.Turner.Model.Vienna
 
 
 
--- * Tests of the ViennaRNA importer
-
--- | Make sure that we can parse successfully.
-
-case_Vienna_RNA_import = do
-  t ← viennaFromFile "./data/rna_turner2004.par"
-  assertBool "Import.Vienna parses successfully" $ isJust t
-
-
-
--- * Make sure that the tables are filled according to the layout of the
--- @.par@ file.
-
--- | The stack table.
-
-case_Vienna_RNA_table_stack = do
-  Just (e,p) ← viennaFromFile "./data/rna_turner2004.par"
-  assertEqual "G-C N_S" (-150) $ (e ^. stack) ! (Z:.GC:.NS)
-  assertEqual "G-C G-C" (-340) $ (e ^. stack) ! (Z:.GC:.GC)
-  assertEqual "G-C G-U" (-250) $ (e ^. stack) ! (Z:.GC:.GU)
-  assertEqual "A-U A-U" (-110) $ (e ^. stack) ! (Z:.AU:.AU)
-
-
-
--- * Make sure that the energy-calculating functions do the right thing.
--- They accept input characters in one order and do the correct lookup.
-
-case_Model_Vienna_eStack = do
-  Just (e,p) ← viennaFromFile "./data/rna_turner2004.par"
-  assertEqual "C A U G" (-210) $ eStack e C A U G
-  -- wc-sc-example.html
-  -- ~AGCGCU~AGCGCU~
-  -- ~[[[[[(~)]]]]]~
-  assertEqual "A G C U" (-210) $ eStack e A G C U
-  assertEqual "G C G C" (-340) $ eStack e G C G C
-  assertEqual "C G C G" (-240) $ eStack e C G C G
-  assertEqual "G C G C" (-340) $ eStack e G C G C
-  assertEqual "C U A G" (-210) $ eStack e C U A G
+---- * Tests of the ViennaRNA importer
+--
+---- | Make sure that we can parse successfully.
+--
+--case_Vienna_RNA_import = do
+--  t ← viennaFromFile "./data/rna_turner2004.par"
+--  assertBool "Import.Vienna parses successfully" $ isJust t
+--
+--
+--
+---- * Make sure that the tables are filled according to the layout of the
+---- @.par@ file.
+--
+---- | The stack table.
+--
+--case_Vienna_RNA_table_stack = do
+--  Just (e,p) ← viennaFromFile "./data/rna_turner2004.par"
+--  assertEqual "G-C N_S" (-150) $ (e ^. stack) ! (Z:.GC:.NS)
+--  assertEqual "G-C G-C" (-340) $ (e ^. stack) ! (Z:.GC:.GC)
+--  assertEqual "G-C G-U" (-250) $ (e ^. stack) ! (Z:.GC:.GU)
+--  assertEqual "A-U A-U" (-110) $ (e ^. stack) ! (Z:.AU:.AU)
+--
+--
+--
+---- * Make sure that the energy-calculating functions do the right thing.
+---- They accept input characters in one order and do the correct lookup.
+--
+--case_Model_Vienna_eStack = do
+--  Just (e,p) ← viennaFromFile "./data/rna_turner2004.par"
+--  assertEqual "C A U G" (-210) $ eStack e C A U G
+--  -- wc-sc-example.html
+--  -- ~AGCGCU~AGCGCU~
+--  -- ~[[[[[(~)]]]]]~
+--  assertEqual "A G C U" (-210) $ eStack e A G C U
+--  assertEqual "G C G C" (-340) $ eStack e G C G C
+--  assertEqual "C G C G" (-240) $ eStack e C G C G
+--  assertEqual "G C G C" (-340) $ eStack e G C G C
+--  assertEqual "C U A G" (-210) $ eStack e C U A G
 
 -- * Tests of the Turner importer
 

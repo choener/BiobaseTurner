@@ -60,6 +60,8 @@ import           Biobase.Turner.Types
 
 
 
+{-
+
 -- *
 
 -- | Given a directory, fill in the 'Turner2004' data structure
@@ -259,4 +261,6 @@ allEq (x:xs) = L.all (==x) xs
 
 type Prefix = FilePath
 type Suffix = FilePath
+
+-}
 

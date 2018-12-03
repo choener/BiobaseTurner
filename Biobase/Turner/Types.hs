@@ -19,6 +19,9 @@ import           Data.Binary (Binary)
 import           Data.Serialize (Serialize)
 import           Data.Aeson (FromJSON, ToJSON)
 import           Data.Default
+import           Data.Typeable
+import           Data.Data
+import           Data.Data.Lens
 
 import           Biobase.Primary
 import           Biobase.Primary.Nuc.RNA
@@ -39,21 +42,80 @@ import qualified Biobase.Secondary.Vienna as SV
 --        (.....)
 -- @
 
-data OneLoop u e = OneLoop
-  { _hairpinL           ∷ !(Vector e)
+data Hairpin c e = Hairpin
+  { _hairpinLength      ∷ !(Vector e)
     -- ^ Contribution of the length of the unpaired region
-  , _hairpinMM          ∷ !(Unboxed (Z:.u:.u:.u:.u) e)
-    -- ^ The last match to first mismatch contribution. First the 5'-3' pair,
-    -- then the 5', then 3' unpaired nucleotides.
-  , _hairpinLookup      ∷ !(M.Map (VU.Vector u) e)
+  , _hairpinMM          ∷ !(Unboxed (Z:.c:.c:.c:.c) e)
+    -- ^ The last match to first mismatch contribution. In 5'--3' order:
+    -- @5' match - 5' mismatch - ... - 3' mismatch - 3' match@
+  , _hairpinLookup      ∷ !(M.Map (Vector c) e)
+    -- ^ Tabulated energies for short hairpins that do not follow the generic
+    -- scheme.
   , _hairpinGGG         ∷ !e
   , _hairpinCslope      ∷ !e
   , _hairpinCintercept  ∷ !e
   , _hairpinC3          ∷ !e
-  , _hairpinTerm        ∷ !(Unboxed (Z:.u:.u) e)
+  , _hairpinTerm        ∷ !(Unboxed (Z:.c:.c) e)
   }
   deriving (Generic)
-makeLenses ''OneLoop
+makeLenses ''Hairpin
+
+deriving instance
+  ( Show c, Show (LimitType c), Show e
+  , VU.Unbox c, VU.Unbox e
+  ) ⇒ Show (Hairpin c e)
+
+deriving instance
+  ( Data c, Data (LimitType c), VU.Unbox c, Ord c
+  , Data e, VU.Unbox e
+  ) ⇒ Data (Hairpin c e)
+
+-- | A @traversal@ over just the scores.
+--
+-- @(undefined ∷ Hairpin (Letter RNA) Double) & traverseScores %~ (*1000)@
+--
+-- TODO in principle, @x & template .~ (1 :: e)@ would do the same, however
+-- this does not work with @Int@-based scores, as the @c@ index typically is
+-- @Int-based@ as well. We either need to prevent the look-through through the
+-- newtype for @c@ or restrict the @template@ traversal.
+
+traverseScores
+  ∷ ( VU.Unbox e, VU.Unbox e'
+    , PA.Index c, IndexStream (Z:.c:.c:.c:.c), IndexStream (Z:.c:.c)
+  ) ⇒ Traversal (Hairpin c e) (Hairpin c e') e e'
+traverseScores f Hairpin{..} = Hairpin
+  <$> vmapA f _hairpinLength
+  <*> pamapA f _hairpinMM
+  <*> (sequenceA $ M.map f _hairpinLookup)
+  <*> f _hairpinGGG
+  <*> f _hairpinCslope
+  <*> f _hairpinCintercept
+  <*> f _hairpinC3
+  <*> pamapA f _hairpinTerm
+
+vmapA
+  ∷ ( VU.Unbox a, VU.Unbox a'
+    , Applicative f
+  ) ⇒ (a → f a') → Vector a → f (Vector a')
+vmapA f = fmap VU.fromList . sequenceA . Prelude.map f . VU.toList
+{-# Inline vmapA #-}
+
+pamapA f arr = fmap (PA.fromList (PA.upperBound arr)) . sequenceA . Prelude.map f $ PA.toList arr
+{-# Inline pamapA #-}
+
+test = Hairpin
+  { _hairpinLength = VU.singleton (1::Int)
+  , _hairpinMM = fromAssocs (ZZ:..aa:..aa:..aa:..aa) 2 []
+  , _hairpinLookup = M.singleton (VU.singleton U) 3
+  , _hairpinGGG = 4
+  , _hairpinCslope = 5
+  , _hairpinCintercept = 6
+  , _hairpinC3 = 7
+  , _hairpinTerm = fromAssocs (ZZ:..aa:..aa) 8 []
+  }
+  where aa= LtLetter A
+
+-- deriving instance Functor (Hairpin c)
 
 
 

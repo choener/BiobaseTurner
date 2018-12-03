@@ -17,6 +17,8 @@ import           Biobase.Types.Energy
 
 
 
+{-
+
 -- -- | Calculate the energy of a stack. The input order is the order of
 -- -- characters on the tape. Say, @... C A ... U G ...@ leads to the call
 -- -- @eStack C A U G@. The two outer characters @C - G@ are forming the new
@@ -82,4 +84,6 @@ eHairpin OneLoop{..} xs
 --        lrgE = (_hairpinL VG.! 30) + (DekaG . round
 --             . (*) (fromIntegral . getDekaG $ _largeLoop)
 --             . log . (subtract 2) . fromIntegral $ VG.length xs)
+
+-}
 

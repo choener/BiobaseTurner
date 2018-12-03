@@ -23,6 +23,8 @@ import           Biobase.Types.Energy
 
 
 
+{-
+
 -- |
 --
 -- TODO Use @parseFromFileEx@ and provide a function to display errors on
@@ -270,4 +272,6 @@ valueLine = spaces *> (fromInteger <$> integer <|> 999999 <$ text "INF") `sepEnd
 
 
 test = fromFile "data/rna_turner2004.par"
+
+-}
 

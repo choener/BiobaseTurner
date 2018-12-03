@@ -8,20 +8,20 @@
 
 module Biobase.Turner
   ( module Biobase.Turner.Types
-  , turnerFromDir
-  , viennaFromFile
+--  , turnerFromDir
+--  , viennaFromFile
   ) where
 
 import           Biobase.Turner.Types
 import qualified Biobase.Turner.Import.Turner as T
 import qualified Biobase.Turner.Import.Vienna as V
 
-turnerFromDir ∷ String → String → String → IO Turner2004
-turnerFromDir = T.fromDir
-
--- | Import a Vienna energy file. In case @Nothing@ is returned, the errors
--- are on the console and we should quit the program.
-
-viennaFromFile ∷ String → IO (Maybe (Vienna2004, Vienna2004))
-viennaFromFile = V.fromFile
-
+-- turnerFromDir ∷ String → String → String → IO Turner2004
+-- turnerFromDir = T.fromDir
+-- 
+-- -- | Import a Vienna energy file. In case @Nothing@ is returned, the errors
+-- -- are on the console and we should quit the program.
+-- 
+-- viennaFromFile ∷ String → IO (Maybe (Vienna2004, Vienna2004))
+-- viennaFromFile = V.fromFile
+-- 
