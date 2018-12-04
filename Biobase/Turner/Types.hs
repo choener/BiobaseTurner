@@ -70,6 +70,14 @@ deriving instance
   , Data e, VU.Unbox e
   ) ⇒ Data (Hairpin c e)
 
+-- | Stacking helix contributions. Contains parameters for canonical stacks,
+-- bulges, and interior loops.
+
+data Stack c e = Stack
+  { _stacking ∷ !(Unboxed (Z:.c:.c:.c:.c) e)
+  }
+
+{-
 -- | A @traversal@ over just the scores.
 --
 -- @(undefined ∷ Hairpin (Letter RNA) Double) & traverseScores %~ (*1000)@
@@ -102,6 +110,7 @@ vmapA f = fmap VU.fromList . sequenceA . Prelude.map f . VU.toList
 
 pamapA f arr = fmap (PA.fromList (PA.upperBound arr)) . sequenceA . Prelude.map f $ PA.toList arr
 {-# Inline pamapA #-}
+-}
 
 test = Hairpin
   { _hairpinLength = VU.singleton (1::Int)
