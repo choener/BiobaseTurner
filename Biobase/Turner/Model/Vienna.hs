@@ -7,7 +7,7 @@ import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Unboxed as VU
 
 import           Data.PrimitiveArray
-import           Algebra.Structure.SemiRing
+import           Algebra.Structure.Semiring
 
 import           Biobase.Primary.Letter
 import           Biobase.Primary.Nuc.RNA
@@ -28,15 +28,15 @@ import           Biobase.Types.Energy
 -- pair on the stack, while the two inner characters @A - U@ form the old
 -- pair on which to stack.
 --
--- TODO check if @f@ is completely inlined. It is typically @\a b → pairTable ! (Z:.a:.b)@
+-- TODO check if @f@ is completely inlined. It is typically @\a b -> pairTable ! (Z:.a:.b)@
 --
 -- TODO @Letter u -> c@, since we can even be agnostic over what we index with ...
 
 eStack
-  ∷ ( Index c, Unbox e )
-  ⇒ Stack c e
-  → c → c → c → c
-  → e
+  :: ( Index c, Unbox e )
+  => Stack c e
+  -> c -> c -> c -> c
+  -> e
 {-# Inline eStack #-}
 eStack Stack{..} l lp rp r =
   _stacking ! (Z:.l:.lp:.rp:.r)
@@ -44,15 +44,15 @@ eStack Stack{..} l lp rp r =
 -- | Generic helix, which calls the correct specialized function.
 
 eHelix
-  ∷ ( Index c, Unbox c
+  :: ( Index c, Unbox c
     , Unbox e )
-  ⇒ Stack c e
-  → VU.Vector c → VU.Vector c
-  → e
+  => Stack c e
+  -> VU.Vector c -> VU.Vector c
+  -> e
 {-# Inline eHelix #-}
 eHelix stack@Stack{..} ls rs
   | VU.length ls == 2, VU.length rs == 2
-    = eStack stack (VU.head ls) (VU.last ls) (VU.head rs) (VU.last rs)
+    = eStack stack (VU.unsafeHead ls) (VU.unsafeLast ls) (VU.unsafeHead rs) (VU.unsafeLast rs)
 
 
 -- ** Hairpin
@@ -65,17 +65,17 @@ eHelix stack@Stack{..} ls rs
 -- @NNDB@ exactly.
 
 eHairpin
-  ∷ forall e c
-  . ( SemiRing e, VU.Unbox e, VU.Unbox c, Index c, Ord c )
-  ⇒ Hairpin c e
-  → VU.Vector c
-  → e
+  :: forall e c
+  . ( Semiring e, VU.Unbox e, VU.Unbox c, Index c, Ord c )
+  => Hairpin c e
+  -> VU.Vector c
+  -> e
 {-# Inline eHairpin #-}
 eHairpin Hairpin{..} xs
   -- disallow small loops
-  | VG.length xs < 5 = srzero
+  | VG.length xs < 5 = zero
   -- look up special loops
-  | Just e ← MS.lookup xs _hairpinLookup = e
+  | Just e <- MS.lookup xs _hairpinLookup = e
   -- special case of loops with length 3
   | VG.length xs == 5 = mmE ⊗ lenE ⊗ term
   -- standard loops of no special case

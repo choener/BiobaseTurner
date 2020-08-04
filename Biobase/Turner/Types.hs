@@ -43,19 +43,19 @@ import qualified Biobase.Secondary.Vienna as SV
 -- @
 
 data Hairpin c e = Hairpin
-  { _hairpinLength      ∷ !(Vector e)
+  { _hairpinLength      :: !(Vector e)
     -- ^ Contribution of the length of the unpaired region
-  , _hairpinMM          ∷ !(Unboxed (Z:.c:.c:.c:.c) e)
+  , _hairpinMM          :: !(Unboxed (Z:.c:.c:.c:.c) e)
     -- ^ The last match to first mismatch contribution. In 5'--3' order:
     -- @5' match - 5' mismatch - ... - 3' mismatch - 3' match@
-  , _hairpinLookup      ∷ !(M.Map (Vector c) e)
+  , _hairpinLookup      :: !(M.Map (Vector c) e)
     -- ^ Tabulated energies for short hairpins that do not follow the generic
     -- scheme.
-  , _hairpinGGG         ∷ !e
-  , _hairpinCslope      ∷ !e
-  , _hairpinCintercept  ∷ !e
-  , _hairpinC3          ∷ !e
-  , _hairpinTerm        ∷ !(Unboxed (Z:.c:.c) e)
+  , _hairpinGGG         :: !e
+  , _hairpinCslope      :: !e
+  , _hairpinCintercept  :: !e
+  , _hairpinC3          :: !e
+  , _hairpinTerm        :: !(Unboxed (Z:.c:.c) e)
   }
   deriving (Generic)
 makeLenses ''Hairpin
@@ -63,24 +63,24 @@ makeLenses ''Hairpin
 deriving instance
   ( Show c, Show (LimitType c), Show e
   , VU.Unbox c, VU.Unbox e
-  ) ⇒ Show (Hairpin c e)
+  ) => Show (Hairpin c e)
 
 deriving instance
   ( Data c, Data (LimitType c), VU.Unbox c, Ord c
   , Data e, VU.Unbox e
-  ) ⇒ Data (Hairpin c e)
+  ) => Data (Hairpin c e)
 
 -- | Stacking helix contributions. Contains parameters for canonical stacks,
 -- bulges, and interior loops.
 
 data Stack c e = Stack
-  { _stacking ∷ !(Unboxed (Z:.c:.c:.c:.c) e)
+  { _stacking :: !(Unboxed (Z:.c:.c:.c:.c) e)
   }
 
 {-
 -- | A @traversal@ over just the scores.
 --
--- @(undefined ∷ Hairpin (Letter RNA) Double) & traverseScores %~ (*1000)@
+-- @(undefined :: Hairpin (Letter RNA) Double) & traverseScores %~ (*1000)@
 --
 -- TODO in principle, @x & template .~ (1 :: e)@ would do the same, however
 -- this does not work with @Int@-based scores, as the @c@ index typically is
@@ -88,9 +88,9 @@ data Stack c e = Stack
 -- newtype for @c@ or restrict the @template@ traversal.
 
 traverseScores
-  ∷ ( VU.Unbox e, VU.Unbox e'
+  :: ( VU.Unbox e, VU.Unbox e'
     , PA.Index c, IndexStream (Z:.c:.c:.c:.c), IndexStream (Z:.c:.c)
-  ) ⇒ Traversal (Hairpin c e) (Hairpin c e') e e'
+  ) => Traversal (Hairpin c e) (Hairpin c e') e e'
 traverseScores f Hairpin{..} = Hairpin
   <$> vmapA f _hairpinLength
   <*> pamapA f _hairpinMM
@@ -102,9 +102,9 @@ traverseScores f Hairpin{..} = Hairpin
   <*> pamapA f _hairpinTerm
 
 vmapA
-  ∷ ( VU.Unbox a, VU.Unbox a'
+  :: ( VU.Unbox a, VU.Unbox a'
     , Applicative f
-  ) ⇒ (a → f a') → Vector a → f (Vector a')
+  ) => (a -> f a') -> Vector a -> f (Vector a')
 vmapA f = fmap VU.fromList . sequenceA . Prelude.map f . VU.toList
 {-# Inline vmapA #-}
 
@@ -136,16 +136,16 @@ test = Hairpin
 -- 'e'.
 
 data Turner2004Model p u e = Turner2004Model
-  { _stack, _coaxial    ∷ !(Unboxed (PP p) e)
-  , _dangle3, _dangle5  ∷ !(Unboxed (PU p u) e)
-  , _bulgeL             ∷ !(Vector e)
-  , _bulgeSingleC       ∷ !e
-  , _iloop1x1           ∷ !(Unboxed (PPUU p u) e)
-  , _iloop2x1           ∷ !(Unboxed (PPU3 p u) e)
-  , _iloop2x2           ∷ !(Unboxed (PPU4 p u) e)
-  , _iloopL             ∷ !(Vector e)
-  , _iloopMM, _iloop2x3MM, _iloop1xnMM, _multiMM, _exteriorMM, _coaxStack, _tStackCoax ∷ !(Unboxed (PUU p u) e)
-  , _ninio, _maxNinio, _multiOffset, _multiNuc, _multiHelix, _multiAsym, _multiStrain, _largeLoop, _termAU, _intermolecularInit ∷ !e
+  { _stack, _coaxial    :: !(Unboxed (PP p) e)
+  , _dangle3, _dangle5  :: !(Unboxed (PU p u) e)
+  , _bulgeL             :: !(Vector e)
+  , _bulgeSingleC       :: !e
+  , _iloop1x1           :: !(Unboxed (PPUU p u) e)
+  , _iloop2x1           :: !(Unboxed (PPU3 p u) e)
+  , _iloop2x2           :: !(Unboxed (PPU4 p u) e)
+  , _iloopL             :: !(Vector e)
+  , _iloopMM, _iloop2x3MM, _iloop1xnMM, _multiMM, _exteriorMM, _coaxStack, _tStackCoax :: !(Unboxed (PUU p u) e)
+  , _ninio, _maxNinio, _multiOffset, _multiNuc, _multiHelix, _multiAsym, _multiStrain, _largeLoop, _termAU, _intermolecularInit :: !e
   } deriving (Generic)
 
 type N = Letter RNA
@@ -177,18 +177,18 @@ makeLenses ''Turner2004Model
 -- | Map a function over all 'e' elements.
 
 emap
-  ∷ ( PA.Index p, PA.Index u
+  :: ( PA.Index p, PA.Index u
     , PA.Index (PP p)
     , PA.Index (PU p u), PA.Index (PUU p u), PA.Index (PPUU p u), PA.Index (PPU3 p u), PA.Index (PPU4 p u)
     , VU.Unbox e, VU.Unbox e'
     )
-  ⇒ (e → e')
+  => (e -> e')
   -- ^ conversion of "energies" @e@ to @e'@ with potentially different type.
   -- the @e@'s could very well be probabilities.
-  → Turner2004Model p u e
+  -> Turner2004Model p u e
   -- the input turner model. We may not change the paired @p@ or unpaired @u@
   -- types, only @e@ with 'emap'.
-  → Turner2004Model p u e'
+  -> Turner2004Model p u e'
 emap f Turner2004Model{..} = Turner2004Model
   { _stack              = PA.map f _stack
   , _dangle3            = PA.map f _dangle3
