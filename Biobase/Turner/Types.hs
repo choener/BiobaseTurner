@@ -77,6 +77,12 @@ data Stack c e = Stack
   { _stacking :: !(Unboxed (Z:.c:.c:.c:.c) e)
   }
 
+-- | Multi-branched contributions.
+
+data Multi c e = Multi
+  {
+  }
+
 {-
 -- | A @traversal@ over just the scores.
 --

@@ -1,4 +1,10 @@
 
+-- | This module provides a small number of functions that together implement the "Vienna-variant"
+-- of the Turner energy model. This variant is being used in the ViennaRNA package and replicated
+-- here for ease-of-use.
+--
+-- TODO benchmark variant separations, further variants where necessary.
+
 module Biobase.Turner.Model.Vienna where
 
 import           Data.Vector.Unboxed (Unbox)
@@ -19,8 +25,6 @@ import           Biobase.Types.Energy
 
 -- ** Stack variants: canonical stack, left and right bulge, interior loop.
 -- Common function wrapping all four variants.
---
--- TODO benchmark variant separations, further variants where necessary.
 
 -- | Calculate the energy of a stack. The input order is the order of
 -- characters on the tape. Say, @... C A ... U G ...@ leads to the call
@@ -41,11 +45,11 @@ eStack
 eStack Stack{..} l lp rp r =
   _stacking ! (Z:.l:.lp:.rp:.r)
 
--- | Generic helix, which calls the correct specialized function.
+-- | Generic helix, which calls the correct specialized function. This function calculates only the
+-- helix energy of two pairs, without the continuation from a previous "weak" structure.
 
 eHelix
-  :: ( Index c, Unbox c
-    , Unbox e )
+  :: ( Index c, Unbox c, Unbox e )
   => Stack c e
   -> VU.Vector c -> VU.Vector c
   -> e
@@ -65,8 +69,7 @@ eHelix stack@Stack{..} ls rs
 -- @NNDB@ exactly.
 
 eHairpin
-  :: forall e c
-  . ( Semiring e, VU.Unbox e, VU.Unbox c, Index c, Ord c )
+  :: ( Semiring e, VU.Unbox e, VU.Unbox c, Index c, Ord c )
   => Hairpin c e
   -> VU.Vector c
   -> e
@@ -95,4 +98,17 @@ eHairpin Hairpin{..} xs
 --        lrgE = (_hairpinL VG.! 30) + (DekaG . round
 --             . (*) (fromIntegral . getDekaG $ _largeLoop)
 --             . log . (subtract 2) . fromIntegral $ VG.length xs)
+
+
+
+-- ** Closure of a multibranched loop
+
+eMulti
+  :: ( Semiring e, VU.Unbox c )
+  => Multi c e
+  -> VU.Vector c
+  -> VU.Vector c
+  -> e
+{-# Inline eMulti #-}
+eMulti Multi{} ls rs = error "write me: eMulti"
 
