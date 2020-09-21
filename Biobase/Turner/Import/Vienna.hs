@@ -3,8 +3,8 @@
 
 module Biobase.Turner.Import.Vienna where
 
-import           Control.Applicative ( (<|>) )
-import           Control.Monad (guard)
+import           Control.Applicative ( (<|>), Alternative )
+import           Control.Monad (guard, MonadPlus)
 import           Data.List (foldl')
 import           Data.Map.Strict (Map)
 import           Data.PrimitiveArray as PA hiding (map,fromList)
@@ -14,30 +14,64 @@ import           Data.Vector.Unboxed (Vector,fromList)
 import qualified Data.Map.Strict as M
 import           Text.Printf
 import           Text.Trifecta as TT
+import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Control.Effect.Throw
+import           Control.Carrier.Throw.Either
+import           Control.Carrier.Lift
+import           Text.Parser.Token.Style
+import           Data.Char (isSpace)
 
-import           Biobase.Primary (Primary,RNA,primary)
+--import           Biobase.Primary (Primary,RNA,primary)
 import           Biobase.Primary.Nuc.RNA
-import           Biobase.Secondary.Vienna
+import           Biobase.Primary.Letter
+--import           Biobase.Secondary.Vienna
 import           Biobase.Turner.Types
 import           Biobase.Types.Energy
+import           Biobase.Types.BioSequence
 
 
+type R = Letter RNA ()
+type Vienna2004 = Turner2004 Vector Vector R DDG
 
-{-
+newtype P a = P { runP :: Parser a }
+  deriving newtype ( Functor, Applicative, Monad, MonadPlus, Alternative, Parsing, CharParsing, DeltaParsing )
 
--- |
+instance TokenParsing P where
+  someSpace = buildSomeSpaceParser (skipSome (satisfy isSpace)) javaCommentStyle
+
+-- | Returns two model structures, one with energies, one with enthalpies.
 --
--- TODO Use @parseFromFileEx@ and provide a function to display errors on
--- the shell.
+-- TODO Use @data ErrorString (s::String) | ErrorPrint (p :: IO())@ to allow for pretty-printing
+-- errors
 
-fromFile :: FilePath -> IO (Maybe (Vienna2004,Vienna2004))
-fromFile = TT.parseFromFile pVienna
+fromFile :: (MonadIO m, Has (Throw String) sig m) => FilePath -> m (Vienna2004, Vienna2004)
+fromFile fp = TT.parseFromFileEx pVienna fp >>= \case
+  Success r -> return r
+  Failure e -> throwError ("Biobase.Turner.Import.Vienna.fromFile" ++ show e)
+
+-- | High-level parser that also detect correct conclusion of parsing.
 
 pVienna :: Parser (Vienna2004,Vienna2004)
-pVienna = v2Header *> spaces *> (blocksToTurner <$> some (block <* whiteSpace)) <* v2End <* eof
+pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
   where v2Header = text "## RNAfold parameter file v2.0" <?> ".par Header"
         v2End = text "#END" <* newline
+        energiesAndEnthalpies = do
+          whiteSpace
+          s <- Stack <$> blockPP "# stack"
+          se <- Stack <$> blockPP "# stack_enthalpies"
+          return undefined
 
+-- | Parses a block of two stacked pairs.
+
+blockPP :: String -> P (Dense Vector (Z:.R:.R:.R:.R) DDG)
+blockPP s = string s *> someSpace *> (f <$> some ddg)
+  where f = fromAssocs maxBound (DDG 999999) . zip ppnn
+
+ddg = DDG <$> fromInteger <$> (*100) <$> integer
+
+ppnn = (\(a,b) (c,d) -> (Z:.a:.b:.c:.d)) <$> viennaPairsNN <*> viennaPairsNN
+
+{-
 -- | Run through the parsed blocks and insert into @Vienna 2004@ model.
 
 blocksToTurner :: [Block] -> (Vienna2004,Vienna2004)
@@ -131,23 +165,6 @@ type Arr i = Unboxed i DeltaDekaGibbs
 block :: Parser Block
 block =   blockPP <|> blockPBB <|> blockPB <|> blockPPBB <|> blockPPBBB <|> blockPPBBBB
       <|> blockLinear <|> try blockML <|> try blockNinio <|> try blockMisc <|> blockLoops
-
--- | Parses a block of two stacked pairs.
-
-blockPP :: Parser Block
-blockPP = wrapBlock BlockPP blockHeader convertPP
-  where convertPP vs = do
-          let l = length vs
-          guard (l == 7*7) <?> "expected 7*7=49 entries for blockPP but got " ++ show l
-          let rs = fromAssocs minVPP maxVPP (DekaG 999999)
-                 . guardLength l
-                 $ zip [ (Z:.a:.b) | a <- cgnsP, b <- cgnsP ] vs
-          return rs
-        blockHeader = ["stack"]
-
-guardLength k xs
-  | k == length xs = xs
-  | otherwise      = error $ printf "length xs /= %d in xs = %s" k $ show xs
 
 acgun = [A,C,G,U,N]
 nacgu = [N,A,C,G,U]
@@ -271,7 +288,12 @@ valueLine :: Parser [Int]
 valueLine = spaces *> (fromInteger <$> integer <|> 999999 <$ text "INF") `sepEndBy` spaces <* commentLine -- <* newline
 
 
-test = fromFile "data/rna_turner2004.par"
-
 -}
+
+runtest :: IO ()
+runtest = do
+  r <- runM $ runThrow $ fromFile "deps/BiobaseTurner/data/rna_turner2004.par"
+  case r of
+    Left (err::String) -> print err
+    Right r -> print ()
 

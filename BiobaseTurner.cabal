@@ -55,6 +55,7 @@ library
                , containers
                , data-default           >= 0.5
                , filepath
+               , fused-effects          >= 1.0
                , lens                   >= 4
                , primitive              >= 0.5
                , split                  >= 0.2

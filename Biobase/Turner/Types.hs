@@ -91,6 +91,8 @@ data Stack ve c e = Stack
   { _stacking :: !(Dense ve (Z:.c:.c:.c:.c) e)
   }
 
+deriving instance (Show (ve e), Show c, Show e, Show (LimitType c)) => Show (Stack ve c e)
+
 stackE :: (VG.Vector ve a, VG.Vector we b) => Traversal (Stack ve c a) (Stack we c b) a b
 {-# Inlinable stackE #-}
 stackE f (Stack s) = Stack <$> (denseV.vectorTraverse) f s
