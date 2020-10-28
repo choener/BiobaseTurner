@@ -4,7 +4,12 @@
 module Biobase.Turner.Import.Vienna where
 
 import           Control.Applicative ( (<|>), Alternative )
+import           Control.Carrier.Lift
+import           Control.Carrier.Throw.Either
+import           Control.Effect.Throw
 import           Control.Monad (guard, MonadPlus)
+import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Data.Char (isSpace)
 import           Data.List (foldl')
 import           Data.Map.Strict (Map)
 import           Data.PrimitiveArray as PA hiding (map,fromList)
@@ -12,22 +17,17 @@ import           Data.Semigroup ((<>))
 import           Data.Text (Text,pack)
 import           Data.Vector.Unboxed (Vector,fromList)
 import qualified Data.Map.Strict as M
+import           Text.Parser.Token.Style
 import           Text.Printf
 import           Text.Trifecta as TT
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Control.Effect.Throw
-import           Control.Carrier.Throw.Either
-import           Control.Carrier.Lift
-import           Text.Parser.Token.Style
-import           Data.Char (isSpace)
 
---import           Biobase.Primary (Primary,RNA,primary)
-import           Biobase.Primary.Nuc.RNA
 import           Biobase.Primary.Letter
---import           Biobase.Secondary.Vienna
-import           Biobase.Turner.Types
-import           Biobase.Types.Energy
+import           Biobase.Primary.Nuc.RNA
 import           Biobase.Types.BioSequence
+import           Biobase.Types.Energy
+
+import           Biobase.Turner.Types
+
 
 
 type R = Letter RNA ()
@@ -57,19 +57,106 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
         v2End = text "#END" <* newline
         energiesAndEnthalpies = do
           whiteSpace
-          s <- Stack <$> blockPP "# stack"
-          se <- Stack <$> blockPP "# stack_enthalpies"
+          s  <- Stack <$> blockPP "# stack"
+          sE <- Stack <$> blockPP "# stack_enthalpies"
+          mmh  <- blockPNN "# mismatch_hairpin"
+          mmhE <- blockPNN "# mismatch_hairpin_enthalpies"
+          mmi  <- blockPNN "# mismatch_interior"
+          mmiE <- blockPNN "# mismatch_interior_enthalpies"
+          mmi1n  <- blockPNN "# mismatch_interior_1n"
+          mmi1nE <- blockPNN "# mismatch_interior_1n_enthalpies"
+          mmi23  <- blockPNN "# mismatch_interior_23"
+          mmi23E <- blockPNN "# mismatch_interior_23_enthalpies"
+          mmm  <- blockPNN "# mismatch_multi"
+          mmmE <- blockPNN "# mismatch_multi_enthalpies"
+          mme  <- blockPNN "# mismatch_exterior"
+          mmeE <- blockPNN "# mismatch_exterior_enthalpies"
+          d5  <- blockPN "# dangle5"
+          d5E <- blockPN "# dangle5_enthalpies"
+          d3  <- blockPN "# dangle3"
+          d3E <- blockPN "# dangle3_enthalpies"
+          i11  <- blockPPNN "# int11"
+          i11E <- blockPPNN "# int11_enthalpies"
+          i21  <- blockPPNNN "# int21"
+          i21E <- blockPPNNN "# int21_enthalpies"
+          i22  <- blockPPNNN "# int22"
+          i22E <- blockPPNNN "# int22_enthalpies"
+          hpl  <- blockL "# hairpin"
+          hplE <- blockL "# hairpin_enthalpies"
+          bul  <- blockL "# bulge"
+          bulE <- blockL "# bulge_enthalpies"
+          int  <- blockL "# interior"
+          intE <- blockL "# interior_enthalpies"
+          -- NOTE: combined entropy/enthalpy parameters
+          (ml,mlE) <- string "# ML_params" *> someSpace *> ((,) <$> pmlLoop <*> pmlLoop)
+          -- TODO: ignored ninio, misc
+          __ninio <- string "# NINIO" *> someSpace *> some ddg
+          __misc <- string "# Misc" *> someSpace *> some ddg
+          (hexloop,hexloopE) <- loopMaps "# Hexaloops"
+          (tetraloop,tetraloopE) <- loopMaps "# Tetraloops"
+          (triloop,triloopE) <- loopMaps "# Triloops"
           return undefined
 
 -- | Parses a block of two stacked pairs.
 
 blockPP :: String -> P (Dense Vector (Z:.R:.R:.R:.R) DDG)
 blockPP s = string s *> someSpace *> (f <$> some ddg)
+  where f = fromAssocs maxBound (DDG 999999) . zip pp
+
+-- | Parser a block of a stacked pair, with two unpaired mismatched nucleotides.
+
+blockPNN :: String -> P (Dense Vector (Z:.R:.R:.R:.R) DDG)
+blockPNN s = string s *> someSpace *> (f <$> some ddg)
+  where f = fromAssocs maxBound (DDG 999999) . zip pnn
+
+blockPN :: String -> P (Dense Vector (Z:.R:.R:.R) DDG)
+blockPN s = string s *> someSpace *> (f <$> some ddg)
+  where f = fromAssocs maxBound (DDG 999999) . zip pn
+
+blockPPNN :: String -> P (Dense Vector (Z:.R:.R:.R:.R:.R:.R) DDG)
+blockPPNN s = string s *> someSpace *> (f <$> some ddg)
   where f = fromAssocs maxBound (DDG 999999) . zip ppnn
 
-ddg = DDG <$> fromInteger <$> (*100) <$> integer
+blockPPNNN :: String -> P (Dense Vector (Z:.R:.R:.R:.R:.R:.R:.R) DDG)
+blockPPNNN s = string s *> someSpace *> (f <$> some ddg)
+  where f = fromAssocs maxBound (DDG 999999) . zip ppnnn
 
-ppnn = (\(a,b) (c,d) -> (Z:.a:.b:.c:.d)) <$> viennaPairsNN <*> viennaPairsNN
+blockPPNNNN :: String -> P (Dense Vector (Z:.R:.R:.R:.R:.R:.R:.R:.R) DDG)
+blockPPNNNN s = string s *> someSpace *> (f <$> some ddg)
+  where f = fromAssocs maxBound (DDG 999999) . zip ppnnnn
+
+blockL :: String -> P (Dense Vector (Z:.Int) DDG)
+blockL s = string s *> someSpace *> (f <$> some ddg)
+  where f = fromAssocs (ZZ:..LtInt 31) (DDG 999999) . zip (map (Z:.) [0..30])
+
+pmlLoop :: P (MlLoop DDG)
+pmlLoop = MlLoop <$> ddg <*> ddg <*> ddg
+
+loopMaps :: String -> P (M.Map (Vector R) DDG, M.Map (Vector R) DDG)
+loopMaps s = do
+  string s >> someSpace
+  let f k v vE = (k,(v,vE))
+      pkey = pnucv <* someSpace
+  xs <- M.fromList <$> some (f <$> pkey <*> ddg <*> ddg)
+  return (M.map fst xs, M.map snd xs)
+
+ddg = DDG <$> fromInteger <$> (*100) <$> integer
+    <|> (DDG 999999 <$ string "INF" <* someSpace)
+
+pnuc :: P R
+pnuc = charRNA <$> TT.oneOf (map rnaChar acgu)
+
+pnucv :: P (Vector R)
+pnucv = fromList <$> some pnuc
+
+pp = (\(a,b) (c,d) -> (Z:.a:.b:.c:.d)) <$> viennaPairsNN <*> viennaPairsNN
+pnn = (\(a,b) c d  -> (Z:.a:.b:.c:.d)) <$> viennaPairsNN <*> nacgu <*> nacgu
+pn = (\(a,b) c -> (Z:.a:.b:.c)) <$> viennaPairs <*> nacgu
+ppnn = (\(a,b) (c,d) e f -> (Z:.a:.b:.c:.d:.e:.f)) <$> viennaPairsNN <*> viennaPairsNN <*> nacgu <*> nacgu
+ppnnn = (\(a,b) (c,d) e f g -> (Z:.a:.b:.c:.d:.e:.f:.g)) <$> viennaPairsNN <*> viennaPairsNN <*> nacgu <*> nacgu <*> nacgu
+ppnnnn = (\(a,b) (c,d) e f g h -> (Z:.a:.b:.c:.d:.e:.f:.g:.h)) <$> viennaPairs <*> viennaPairs <*> acgu <*> acgu <*> acgu <*> acgu
+
+nacgu = N : acgu
 
 {-
 -- | Run through the parsed blocks and insert into @Vienna 2004@ model.

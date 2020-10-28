@@ -97,7 +97,13 @@ stackE :: (VG.Vector ve a, VG.Vector we b) => Traversal (Stack ve c a) (Stack we
 {-# Inlinable stackE #-}
 stackE f (Stack s) = Stack <$> (denseV.vectorTraverse) f s
 
+-- * Multibranched parameters for loops.
 
+data MlLoop e = MlLoop
+  { _mlLoop :: !e
+  , _mlOpen :: !e
+  , _mlNuc  :: !e
+  }
 
 -- * The full model.
 
