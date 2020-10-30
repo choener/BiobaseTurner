@@ -7,6 +7,7 @@
 
 module Biobase.Turner.Model.Vienna where
 
+import           Data.Maybe (fromMaybe)
 import           Data.Vector.Unboxed (Unbox)
 import qualified Data.Map.Strict as MS
 import qualified Data.Vector.Generic as VG
@@ -61,14 +62,14 @@ eHelix stack@Stack{..} ls rs
     = eStack stack (VG.unsafeHead ls) (VG.unsafeLast ls) (VG.unsafeHead rs) (VG.unsafeLast rs)
 
 
--- ** Hairpin
+
+-- * Loops
 
 -- | The energy of a hairpin.
 --
--- TODO check if @lenE@ is correct for hairpin >= 30.
+-- HP(xs) = mismatch(x_0, x_n, x_1, x_{n-1}) + length(n-2)
 --
--- TODO this is currently a somewhat simplified model not following the
--- @NNDB@ exactly.
+-- TODO incomplete
 
 eHairpin
   :: ( Semiring e, VG.Vector vc c, VG.Vector ve e, Index c, Ord c, Ord (vc c) )
@@ -82,24 +83,19 @@ eHairpin Hairpin{..} xs
   -- look up special loops
   | Just e <- MS.lookup xs _hairpinLookup = e
   -- special case of loops with length 3
-  | VG.length xs == 5 = mmE ⊗ lenE ⊗ term
+  -- | VG.length xs == 5 = mmE ⊗ lenE ⊗ term
   -- standard loops of no special case
   -- TODO missing special closures, as defined in the @NNDB@
-  | otherwise = mmE ⊗ lenE ⊗ term
+  | otherwise = mmE ⊗ lenE
   where n = VG.length xs
         p = VG.unsafeIndex xs 0
         l = VG.unsafeIndex xs 1
         r = VG.unsafeIndex xs (n-1)
         q = VG.unsafeIndex xs n
-        term = _hairpinTerm ! (Z:.p:.q)
         mmE  = _hairpinMM ! (Z:.p:.q:.l:.r)
-        lenE = maybe lrgE
-               id
-             $ _hairpinLength VG.!? VG.length xs
-        lrgE = error "fixme: lrgE"
---        lrgE = (_hairpinL VG.! 30) + (DekaG . round
---             . (*) (fromIntegral . getDekaG $ _largeLoop)
---             . log . (subtract 2) . fromIntegral $ VG.length xs)
+        lenE = fromMaybe lrgE $ _hairpinLength !? (Z:.n-2)
+        llpE = (floor $ log (fromIntegral n-2) / 30) `nTimes` _largeLoop
+        lrgE = (_hairpinLength!(Z:.30)) ⊗ llpE
 
 
 

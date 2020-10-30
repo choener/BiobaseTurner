@@ -12,7 +12,7 @@ license-file:   LICENSE
 build-type:     Simple
 stability:      experimental
 cabal-version:  >= 1.10.0
-tested-with:    GHC == 8.0.2, GHC == 8.2.2
+tested-with:    GHC == 8.10.2
 description:
                 A data structure for Mathews / Turner RNA and DNA energy
                 parameters. This library currently only provides an importer,
@@ -54,6 +54,7 @@ library
                , cereal                 >= 0.4
                , containers
                , data-default           >= 0.5
+               , file-embed             >= 0.0.10
                , filepath
                , fused-effects          >= 1.0
                , lens                   >= 4

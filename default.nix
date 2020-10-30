@@ -1,9 +1,9 @@
 { mkDerivation, aeson, base, binary, BiobaseTypes, BiobaseXNA
 , bytestring, bytestring-lexing, cereal, cmdargs, containers
-, data-default, filepath, fused-effects, HUnit, lens, primitive
-, PrimitiveArray, QuickCheck, SciBaseTypes, split, stdenv, tasty
-, tasty-hunit, tasty-quickcheck, tasty-th, text, trifecta, vector
-, vector-th-unbox
+, data-default, file-embed, filepath, fused-effects, HUnit, lens
+, primitive, PrimitiveArray, QuickCheck, SciBaseTypes, split
+, stdenv, tasty, tasty-hunit, tasty-quickcheck, tasty-th, text
+, trifecta, vector, vector-th-unbox
 }:
 mkDerivation {
   pname = "BiobaseTurner";
@@ -13,9 +13,9 @@ mkDerivation {
   isExecutable = true;
   libraryHaskellDepends = [
     aeson base binary BiobaseTypes BiobaseXNA bytestring
-    bytestring-lexing cereal containers data-default filepath
-    fused-effects lens primitive PrimitiveArray SciBaseTypes split text
-    trifecta vector vector-th-unbox
+    bytestring-lexing cereal containers data-default file-embed
+    filepath fused-effects lens primitive PrimitiveArray SciBaseTypes
+    split text trifecta vector vector-th-unbox
   ];
   executableHaskellDepends = [
     aeson base binary bytestring cereal cmdargs containers vector

@@ -48,7 +48,7 @@ import qualified Biobase.Secondary.Vienna as SV
 -- @
 
 data Hairpin vc ve c e = Hairpin
-  { _hairpinLength      :: !(ve e)
+  { _hairpinLength      :: !(Dense ve (Z:.Int) e)
     -- ^ Contribution of the length of the unpaired region
   , _hairpinMM          :: !(Dense ve (Z:.c:.c:.c:.c) e)
     -- ^ The last match to first mismatch contribution. In 5'--3' order:
@@ -60,7 +60,7 @@ data Hairpin vc ve c e = Hairpin
   , _hairpinCslope      :: !e
   , _hairpinCintercept  :: !e
   , _hairpinC3          :: !e
-  , _hairpinTerm        :: !(Dense ve (Z:.c:.c) e)
+  , _largeLoop          :: !e
   }
   deriving (Generic)
 makeLenses ''Hairpin
@@ -70,15 +70,15 @@ makeLenses ''Hairpin
 
 hairpinE :: (VG.Vector ve a, VG.Vector we b) => Traversal (Hairpin vc ve c a) (Hairpin vc we c b) a b
 {-# Inlinable hairpinE #-}
-hairpinE f (Hairpin hl hmm lkup ggg sl ntr c3 ht)
-  = Hairpin <$> vectorTraverse f hl
+hairpinE f (Hairpin hl hmm lkup ggg sl ntr c3 llp)
+  = Hairpin <$> (denseV.vectorTraverse) f hl
             <*> (denseV.vectorTraverse) f hmm
             <*> traverse f lkup
             <*> f ggg
             <*> f sl
             <*> f ntr
             <*> f c3
-            <*> (denseV.vectorTraverse) f ht
+            <*> f llp
 
 deriving instance
   ( Show c, Show (LimitType c), Show e, Show (vc c), Show (ve e)
@@ -114,25 +114,11 @@ data Turner2004 vc ve c e = Turner2004
   }
 makeLenses ''Turner2004
 
+deriving instance (Show c, Show e, Show (vc c), Show (ve e), Show (LimitType c)) => Show (Turner2004 vc ve c e)
+
 -- | Traverse all energy fields with a polymorphic and energy-vector changing traversal.
 
 turner2004E :: (VG.Vector ve a, VG.Vector we b) => Traversal (Turner2004 vc ve c a) (Turner2004 vc we c b) a b
 {-# Inlinable turner2004E #-}
 turner2004E f (Turner2004 hp s) = Turner2004 <$> hairpinE f hp <*> stackE f s
-
-
-
--- * Testing
-
-test = Hairpin
-  { _hairpinLength = VU.singleton (1::Int)
-  , _hairpinMM = fromAssocs (ZZ:..aa:..aa:..aa:..aa) 2 []
-  , _hairpinLookup = M.singleton (VU.singleton U) 3
-  , _hairpinGGG = 4
-  , _hairpinCslope = 5
-  , _hairpinCintercept = 6
-  , _hairpinC3 = 7
-  , _hairpinTerm = fromAssocs (ZZ:..aa:..aa) 8 []
-  }
-  where aa= LtLetter A
 
