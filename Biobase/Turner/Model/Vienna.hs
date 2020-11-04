@@ -63,7 +63,7 @@ eHelix stack@Stack{..} ls rs
 
 
 
--- * Loops
+-- ** The hairpin loop
 
 -- | The energy of a hairpin.
 --
