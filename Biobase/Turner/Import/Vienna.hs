@@ -3,32 +3,32 @@
 
 module Biobase.Turner.Import.Vienna where
 
-import           Control.Applicative ( (<|>), Alternative )
-import           Control.Carrier.Lift
-import           Control.Carrier.Throw.Either
-import           Control.Effect.Throw
-import           Control.Monad (guard, MonadPlus)
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Data.Char (isSpace)
-import           Data.List (foldl')
-import           Data.Map.Strict (Map)
-import           Data.PrimitiveArray as PA hiding (map,fromList)
-import           Data.Semigroup ((<>))
-import           Data.Text (Text,pack)
-import           Data.Vector.Unboxed (Vector,fromList)
+import Control.Applicative ( (<|>), Alternative )
+import Control.Carrier.Lift
+import Control.Carrier.Throw.Either
+import Control.Effect.Throw
+import Control.Monad (guard, MonadPlus)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Data.ByteString (ByteString)
+import Data.Char (isSpace)
+import Data.List (foldl')
+import Data.Map.Strict (Map)
+import Data.PrimitiveArray as PA hiding (map,fromList)
+import Data.Semigroup ((<>))
+import Data.Text (Text,pack)
+import Data.Vector.Unboxed (Vector,fromList)
 import qualified Data.Map.Strict as M
-import           Text.Parser.Token.Style
-import           Text.Printf
-import           Text.Trifecta as TT
-import           Data.ByteString (ByteString)
-import           Text.Trifecta.Delta as TD
+import Text.Parser.Token.Style
+import Text.Printf
+import Text.Trifecta as TT
+import Text.Trifecta.Delta as TD
 
-import           Biobase.Primary.Letter
-import           Biobase.Primary.Nuc.RNA
-import           Biobase.Types.BioSequence
-import           Biobase.Types.Energy
+import Biobase.Primary.Letter
+import Biobase.Primary.Nuc.RNA
+import Biobase.Types.BioSequence
+import Biobase.Types.Energy
 
-import           Biobase.Turner.Types
+import Biobase.Turner.Types
 
 
 
