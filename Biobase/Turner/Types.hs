@@ -162,6 +162,10 @@ data MlLoop e = MlLoop
   , _mlNuc  :: !e
   }
 
+data Multi ve c e = Multi
+  { -- _stacking :: !(Dense ve (Z:.c:.c:.c:.c) e)
+  }
+
 -- * The full model.
 
 data Turner2004 vc ve c e = Turner2004
