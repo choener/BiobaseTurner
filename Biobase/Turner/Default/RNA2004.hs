@@ -2,7 +2,10 @@
 -- | Default @Turner RNA 2004@ energy parameters parsed from
 -- @data/rna_turner2004.par@.
 
-module Biobase.Turner.Default.RNA2004 where
+module Biobase.Turner.Default.RNA2004
+  ( module Biobase.Turner.Default.RNA2004
+  , Vienna2004
+  ) where
 
 import Data.ByteString
 import Data.FileEmbed

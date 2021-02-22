@@ -110,29 +110,45 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               { _hairpinLength = hpl
               , _hairpinMM = mmh
               , _hairpinLookup = hexloop <> tetraloop <> triloop
-              , _hairpinGGG = ddgDbg
-              , _hairpinCslope = ddgDbg
-              , _hairpinCintercept = ddgDbg
-              , _hairpinC3 = ddgDbg
+--              , _hairpinGGG = ddgDbg
+--              , _hairpinCslope = ddgDbg
+--              , _hairpinCintercept = ddgDbg
+--              , _hairpinC3 = ddgDbg
               , _largeLoop = ddgDbg
+              }
+            intloop = IntLoop
+              { _intLoop1x1 = i11
+              }
+            multi = Multi
+              { _mismatchMulti = mmm
               }
             entropy = Turner2004
               { _hairpin = hairpin
               , _stack   = s
+              , _intloop = intloop
+              , _multi   = multi
               }
             hairpinE = Hairpin
               { _hairpinLength = hplE
               , _hairpinMM = mmhE
               , _hairpinLookup = hexloopE <> tetraloopE <> triloopE
-              , _hairpinGGG = ddgDbg
-              , _hairpinCslope = ddgDbg
-              , _hairpinCintercept = ddgDbg
-              , _hairpinC3 = ddgDbg
+--              , _hairpinGGG = ddgDbg
+--              , _hairpinCslope = ddgDbg
+--              , _hairpinCintercept = ddgDbg
+--              , _hairpinC3 = ddgDbg
               , _largeLoop = ddgDbg
+              }
+            intloopE = IntLoop
+              { _intLoop1x1 = i11E
+              }
+            multiE = Multi
+              { _mismatchMulti = mmmE
               }
             enthalpy = Turner2004
               { _hairpin = hairpinE
               , _stack   = sE
+              , _intloop = intloopE
+              , _multi   = multiE
               }
           return (entropy,enthalpy)
 

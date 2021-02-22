@@ -56,7 +56,7 @@ data Hairpin vc ve c e = Hairpin
   , _hairpinLookup      :: !(M.Map (vc c) e)
     -- ^ Tabulated energies for short hairpins that do not follow the generic
     -- scheme.
-  , _hairpinAU          :: !(Dense ve (Z:.c:.c) e)
+--  , _hairpinAU          :: !(Dense ve (Z:.c:.c) e)
   , _largeLoop          :: !e
 --  , _hairpinGGG         :: !e
 --  , _hairpinCslope      :: !e
@@ -71,11 +71,11 @@ makeLenses ''Hairpin
 
 hairpinE :: (VG.Vector ve a, VG.Vector we b) => Traversal (Hairpin vc ve c a) (Hairpin vc we c b) a b
 {-# Inlinable hairpinE #-}
-hairpinE f (Hairpin hl hmm lkup tAU llp) -- ggg sl ntr c3)
+hairpinE f (Hairpin hl hmm lkup {- tAU -} llp) -- ggg sl ntr c3)
   = Hairpin <$> (denseV.vectorTraverse) f hl
             <*> (denseV.vectorTraverse) f hmm
             <*> traverse f lkup
-            <*> (denseV.vectorTraverse) f tAU
+--            <*> (denseV.vectorTraverse) f tAU
             <*> f llp
 --            <*> f ggg
 --            <*> f sl
@@ -125,34 +125,34 @@ stackE f (Stack s) = Stack <$> (denseV.vectorTraverse) f s
 
 data IntLoop ve c e = IntLoop
   { _intLoop1x1 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c) e)
-  , _intLoop1x2 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c:.c) e)
-  , _intLoop2x2 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c:.c:.c) e)
-  , _intLoop2x3 :: !(Dense ve (Z:.c:.c:.c:.c) e)
-  , _intLoop1xn :: !(Dense ve (Z:.c:.c:.c:.c) e)
-  , _intLoopMM  :: !(Dense ve (Z:.c:.c:.c:.c) e)
-  , _intLoopL   :: !(Dense ve (Z:.Int) e)
-  , _intLoopNinio :: !e
-  , _intLoopMaxNinio :: !e
-  , _bulgeL     :: !(Dense ve (Z:.Int) e)
-  , _bulgeAU    :: !(Dense ve (Z:.c:.c) e)
+--  , _intLoop1x2 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c:.c) e)
+--  , _intLoop2x2 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c:.c:.c) e)
+--  , _intLoop2x3 :: !(Dense ve (Z:.c:.c:.c:.c) e)
+--  , _intLoop1xn :: !(Dense ve (Z:.c:.c:.c:.c) e)
+--  , _intLoopMM  :: !(Dense ve (Z:.c:.c:.c:.c) e)
+--  , _intLoopL   :: !(Dense ve (Z:.Int) e)
+--  , _intLoopNinio :: !e
+--  , _intLoopMaxNinio :: !e
+--  , _bulgeL     :: !(Dense ve (Z:.Int) e)
+--  , _bulgeAU    :: !(Dense ve (Z:.c:.c) e)
   }
 deriving instance (Show (ve e), Show c, Show e, Show (LimitType c)) => Show (IntLoop ve c e)
 
 intLoopE :: (VG.Vector ve a, VG.Vector we b) => Traversal (IntLoop ve c a) (IntLoop we c b) a b
 {-# Inlinable intLoopE #-}
-intLoopE f (IntLoop i11 i12 i22 i23 i1n imm ilen ininio imaxninio blen bau)
+intLoopE f (IntLoop i11 {- i12 i22 i23 i1n imm ilen ininio imaxninio blen bau -} )
   =   IntLoop
   <$> (denseV.vectorTraverse) f i11
-  <*> (denseV.vectorTraverse) f i12
-  <*> (denseV.vectorTraverse) f i22
-  <*> (denseV.vectorTraverse) f i23
-  <*> (denseV.vectorTraverse) f i1n
-  <*> (denseV.vectorTraverse) f imm
-  <*> (denseV.vectorTraverse) f ilen
-  <*> f ininio
-  <*> f imaxninio
-  <*> (denseV.vectorTraverse) f blen
-  <*> (denseV.vectorTraverse) f bau
+--  <*> (denseV.vectorTraverse) f i12
+--  <*> (denseV.vectorTraverse) f i22
+--  <*> (denseV.vectorTraverse) f i23
+--  <*> (denseV.vectorTraverse) f i1n
+--  <*> (denseV.vectorTraverse) f imm
+--  <*> (denseV.vectorTraverse) f ilen
+--  <*> f ininio
+--  <*> f imaxninio
+--  <*> (denseV.vectorTraverse) f blen
+--  <*> (denseV.vectorTraverse) f bau
 
 -- * Multibranched parameters for loops.
 
@@ -163,16 +163,27 @@ data MlLoop e = MlLoop
   }
 
 data Multi ve c e = Multi
-  { -- _stacking :: !(Dense ve (Z:.c:.c:.c:.c) e)
-  }
+  { _mismatchMulti :: !(Dense ve (Z:.c:.c:.c:.c) e)
+    -- ^ terminal multibranch mismatches
+  } deriving (Generic)
+makeLenses ''Multi
+
+deriving instance (Show (ve e), Show c, Show e, Show (LimitType c)) => Show (Multi ve c e)
+
+multiE :: (VG.Vector ve a, VG.Vector we b) => Traversal (Multi ve c a) (Multi we c b) a b
+multiE f (Multi mmm)
+  = Multi
+  <$> (denseV.vectorTraverse) f mmm
 
 -- * The full model.
 
 data Turner2004 vc ve c e = Turner2004
-  { _hairpin :: !(Hairpin vc ve c e)
+  { _hairpin  :: !(Hairpin vc ve c e)
     -- ^ Hairpin contributions
-  , _stack   :: !(Stack ve c e)
-  }
+  , _stack    :: !(Stack ve c e)
+  , _intloop  :: !(IntLoop ve c e)
+  , _multi    :: !(Multi ve c e)
+  } deriving (Generic)
 makeLenses ''Turner2004
 
 deriving instance (Show c, Show e, Show (vc c), Show (ve e), Show (LimitType c)) => Show (Turner2004 vc ve c e)
@@ -181,5 +192,5 @@ deriving instance (Show c, Show e, Show (vc c), Show (ve e), Show (LimitType c))
 
 turner2004E :: (VG.Vector ve a, VG.Vector we b) => Traversal (Turner2004 vc ve c a) (Turner2004 vc we c b) a b
 {-# Inlinable turner2004E #-}
-turner2004E f (Turner2004 hp s) = Turner2004 <$> hairpinE f hp <*> stackE f s
+turner2004E f (Turner2004 hp s il ml) = Turner2004 <$> hairpinE f hp <*> stackE f s <*> intLoopE f il <*> multiE f ml
 
