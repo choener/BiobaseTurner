@@ -214,3 +214,20 @@ scoreMultiLoop Multi{..} l lp rp r =
   let e = _mismatchMulti ! (Z:.l:.lp:.rp:.r)
   in  e -- traceShow (l,lp,rp,r,e) e
 
+-- ** Score external loops
+
+-- | If the external loop has characters to left or right, score with a mismatch system.
+
+scoreExteriorLoop
+  :: ( Semiring e, VU.Unbox c, Index c, VG.Vector ve e )
+  => Exterior ve c e
+  -> Maybe c -> Maybe c
+  -> Maybe c -> Maybe c
+  -> e
+{-# Inline scoreExteriorLoop #-}
+scoreExteriorLoop Exterior{..} mlo mli mri mro
+  | Just lo <- mlo, Just li <- mli
+  , Just ri <- mri, Just ro <- mro = let e = _mismatchExterior ! (Z:.lo:.li:.ri:.ro)
+                                     in  e
+  | otherwise = one
+

@@ -171,9 +171,25 @@ makeLenses ''Multi
 deriving instance (Show (ve e), Show c, Show e, Show (LimitType c)) => Show (Multi ve c e)
 
 multiE :: (VG.Vector ve a, VG.Vector we b) => Traversal (Multi ve c a) (Multi we c b) a b
+{-# Inline multiE #-}
 multiE f (Multi mmm)
   = Multi
   <$> (denseV.vectorTraverse) f mmm
+
+-- * Exterior loops
+
+data Exterior ve c e = Exterior
+  { _mismatchExterior :: !(Dense ve (Z:.c:.c:.c:.c) e)
+    -- ^ terminal mismatch of exterior loop
+  } deriving (Generic)
+
+deriving instance (Show (ve e), Show c, Show e, Show (LimitType c)) => Show (Exterior ve c e)
+
+exteriorE :: (VG.Vector ve a, VG.Vector we b) => Traversal (Exterior ve c a) (Exterior we c b) a b
+{-# Inline exteriorE #-}
+exteriorE f (Exterior ext)
+  = Exterior
+  <$> (denseV.vectorTraverse) f ext
 
 -- * The full model.
 
@@ -183,6 +199,7 @@ data Turner2004 vc ve c e = Turner2004
   , _stack    :: !(Stack ve c e)
   , _intloop  :: !(IntLoop ve c e)
   , _multi    :: !(Multi ve c e)
+  , _exterior :: !(Exterior ve c e)
   } deriving (Generic)
 makeLenses ''Turner2004
 
@@ -192,5 +209,5 @@ deriving instance (Show c, Show e, Show (vc c), Show (ve e), Show (LimitType c))
 
 turner2004E :: (VG.Vector ve a, VG.Vector we b) => Traversal (Turner2004 vc ve c a) (Turner2004 vc we c b) a b
 {-# Inlinable turner2004E #-}
-turner2004E f (Turner2004 hp s il ml) = Turner2004 <$> hairpinE f hp <*> stackE f s <*> intLoopE f il <*> multiE f ml
+turner2004E f (Turner2004 hp s il ml ext) = Turner2004 <$> hairpinE f hp <*> stackE f s <*> intLoopE f il <*> multiE f ml <*> exteriorE f ext
 

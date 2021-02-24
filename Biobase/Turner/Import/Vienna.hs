@@ -127,6 +127,9 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               , _stack   = s
               , _intloop = intloop
               , _multi   = multi
+              , _exterior = Exterior
+                { _mismatchExterior = mme
+                }
               }
             hairpinE = Hairpin
               { _hairpinLength = hplE
@@ -149,6 +152,9 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               , _stack   = sE
               , _intloop = intloopE
               , _multi   = multiE
+              , _exterior = Exterior
+                { _mismatchExterior = mmeE
+                }
               }
           return (entropy,enthalpy)
 
