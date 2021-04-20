@@ -133,14 +133,14 @@ data IntLoop ve c e = IntLoop
 --  , _intLoopL   :: !(Dense ve (Z:.Int) e)
 --  , _intLoopNinio :: !e
 --  , _intLoopMaxNinio :: !e
---  , _bulgeL     :: !(Dense ve (Z:.Int) e)
+  , _bulgeL     :: !(Dense ve (Z:.Int) e)
 --  , _bulgeAU    :: !(Dense ve (Z:.c:.c) e)
   }
 deriving instance (Show (ve e), Show c, Show e, Show (LimitType c)) => Show (IntLoop ve c e)
 
 intLoopE :: (VG.Vector ve a, VG.Vector we b) => Traversal (IntLoop ve c a) (IntLoop we c b) a b
 {-# Inlinable intLoopE #-}
-intLoopE f (IntLoop i11 {- i12 i22 i23 i1n imm ilen ininio imaxninio blen bau -} )
+intLoopE f (IntLoop i11 {- i12 i22 i23 i1n imm ilen ininio imaxninio bau -} blen )
   =   IntLoop
   <$> (denseV.vectorTraverse) f i11
 --  <*> (denseV.vectorTraverse) f i12
@@ -151,7 +151,7 @@ intLoopE f (IntLoop i11 {- i12 i22 i23 i1n imm ilen ininio imaxninio blen bau -}
 --  <*> (denseV.vectorTraverse) f ilen
 --  <*> f ininio
 --  <*> f imaxninio
---  <*> (denseV.vectorTraverse) f blen
+  <*> (denseV.vectorTraverse) f blen
 --  <*> (denseV.vectorTraverse) f bau
 
 -- * Multibranched parameters for loops.
@@ -181,15 +181,21 @@ multiE f (Multi mmm)
 data Exterior ve c e = Exterior
   { _mismatchExterior :: !(Dense ve (Z:.c:.c:.c:.c) e)
     -- ^ terminal mismatch of exterior loop
+  , _dangle5 :: !(Dense ve (Z:.c:.c:.c) e)
+    -- ^ dangling nucleotide on the 5' side
+  , _dangle3 :: !(Dense ve (Z:.c:.c:.c) e)
+    -- ^ dangling nucleotide on the 3' side
   } deriving (Generic)
 
 deriving instance (Show (ve e), Show c, Show e, Show (LimitType c)) => Show (Exterior ve c e)
 
 exteriorE :: (VG.Vector ve a, VG.Vector we b) => Traversal (Exterior ve c a) (Exterior we c b) a b
 {-# Inline exteriorE #-}
-exteriorE f (Exterior ext)
+exteriorE f (Exterior ext d5 d3)
   = Exterior
   <$> (denseV.vectorTraverse) f ext
+  <*> (denseV.vectorTraverse) f d5
+  <*> (denseV.vectorTraverse) f d3
 
 -- * The full model.
 

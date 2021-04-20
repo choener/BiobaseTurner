@@ -118,6 +118,7 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               }
             intloop = IntLoop
               { _intLoop1x1 = i11
+              , _bulgeL = bul
               }
             multi = Multi
               { _mismatchMulti = mmm
@@ -129,6 +130,8 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               , _multi   = multi
               , _exterior = Exterior
                 { _mismatchExterior = mme
+                , _dangle5 = d5
+                , _dangle3 = d3
                 }
               }
             hairpinE = Hairpin
@@ -143,6 +146,7 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               }
             intloopE = IntLoop
               { _intLoop1x1 = i11E
+              , _bulgeL = bulE
               }
             multiE = Multi
               { _mismatchMulti = mmmE
@@ -154,6 +158,8 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               , _multi   = multiE
               , _exterior = Exterior
                 { _mismatchExterior = mmeE
+                , _dangle5 = d5E
+                , _dangle3 = d3E
                 }
               }
           return (entropy,enthalpy)

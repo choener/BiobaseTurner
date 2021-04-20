@@ -7,7 +7,7 @@
 
 module Biobase.Turner.Model.Vienna where
 
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isNothing)
 import Data.Vector.Unboxed (Unbox)
 import Debug.Trace (trace,traceShow)
 import qualified Data.Map.Strict as MS
@@ -16,7 +16,7 @@ import qualified Data.Vector.Unboxed as VU
 import Text.Printf (printf)
 
 import Algebra.Structure.Semiring
-import Data.PrimitiveArray
+import Data.PrimitiveArray as PA
 
 import Biobase.Primary.Letter
 import Biobase.Primary.Nuc.RNA
@@ -121,7 +121,7 @@ scoreInteriorLoop stack@Stack{..} intloop@IntLoop{..} ls lsR rsL rs
   | lls==1, rrs==1 = eStack stack (VG.unsafeLast ls) (VG.unsafeHead rs) rsL lsR -- note outer, inner pair, both 5'--3'
   -- Stack with 1nt slippage: NOTE head/last switched, because of the "free" nt. In principle, we
   -- can unify canonical and slippage stacks
-  | lls==1&&rrs==2 || lls==2&&rrs==1 = eStack stack (VG.unsafeHead ls) (VG.unsafeLast rs) rsL lsR -- ⊗ _bulgeL!(Z:.1)
+  | lls==1&&rrs==2 || lls==2&&rrs==1 = eStack stack (VG.unsafeHead ls) (VG.unsafeLast rs) rsL lsR ⊗ _bulgeL!(Z:.1)
 --  -- 1x1 interior loop
 --  | lls==2, rrs==2 = eIntLoop1x1 intloop lo0 ro0 ri0 li0 lo1 ro1
 --  -- 2x1 interior loops
@@ -190,7 +190,7 @@ scoreHairpin Hairpin{..} xs
   -- disallow small loops
   | VG.length xs < 5 = zero
   -- special case of loops with length 3
-  | VG.length xs == 5 = lenE -- ⊗ _hairpinAU ! (Z:.lo0:.ro0)
+  | VG.length xs == 5 = lenE ⊗ wobble -- ⊗ _hairpinAU ! (Z:.lo0:.ro0)
   -- standard loops of no special case
   -- TODO missing special closures, as defined in the @NNDB@
   | otherwise = _hairpinMM!(Z:.lo0:.ro0:.lo1:.ro1) ⊗ lenE
@@ -200,6 +200,7 @@ scoreHairpin Hairpin{..} xs
         lenE = fromMaybe lrgE $ _hairpinLength !? (Z:.n-2)
         llpE = (floor $ log (fromIntegral n-2) / 30) `nTimes` _largeLoop
         lrgE = (_hairpinLength!(Z:.30)) ⊗ llpE
+        wobble = undefined
 
 -- ** Closure of a multibranched loop
 
@@ -219,15 +220,24 @@ scoreMultiLoop Multi{..} l lp rp r =
 -- | If the external loop has characters to left or right, score with a mismatch system.
 
 scoreExteriorLoop
-  :: ( Semiring e, VU.Unbox c, Index c, VG.Vector ve e )
+  :: ( Semiring e, VU.Unbox c, Index c, VG.Vector ve e, Show e, Show c )
   => Exterior ve c e
   -> Maybe c -> Maybe c
   -> Maybe c -> Maybe c
   -> e
 {-# Inline scoreExteriorLoop #-}
 scoreExteriorLoop Exterior{..} mlo mli mri mro
+  -- mismatch exterior
   | Just lo <- mlo, Just li <- mli
-  , Just ri <- mri, Just ro <- mro = let e = _mismatchExterior ! (Z:.lo:.li:.ri:.ro)
+  , Just ri <- mri, Just ro <- mro = let e = _mismatchExterior ! (Z:.li:.ri:.lo:.ro)
+                                     in  e
+  -- dangle5
+  | Just lo <- mlo, Nothing <- mro
+  , Just li <- mli, Just ri <- mri = let e = _dangle5 ! (Z:.li:.ri:.lo)
+                                     in  e
+  -- dangle3
+  | Nothing <- mlo, Just ro <- mro
+  , Just li <- mli, Just ri <- mri = let e = _dangle3 ! (Z:.li:.ri:.ro)
                                      in  e
   | otherwise = one
 
