@@ -23,6 +23,7 @@ import Text.Printf
 import Text.Trifecta as TT
 import Text.Trifecta.Delta as TD
 
+import Algebra.Structure.Semiring
 import Biobase.Primary.Letter
 import Biobase.Primary.Nuc.RNA
 import Biobase.Types.BioSequence
@@ -89,8 +90,8 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
           i11E <- blockPPNN "# int11_enthalpies"
           i21  <- blockPPNNN "# int21"
           i21E <- blockPPNNN "# int21_enthalpies"
-          i22  <- blockPPNNN "# int22"
-          i22E <- blockPPNNN "# int22_enthalpies"
+          i22  <- blockPPNNNN "# int22"
+          i22E <- blockPPNNNN "# int22_enthalpies"
           hpl  <- blockL "# hairpin"
           hplE <- blockL "# hairpin_enthalpies"
           bul  <- blockL "# bulge"
@@ -105,11 +106,17 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
           (hexloop,hexloopE) <- loopMaps "# Hexaloops"
           (tetraloop,tetraloopE) <- loopMaps "# Tetraloops"
           (triloop,triloopE) <- loopMaps "# Triloops"
+          -- NOTE end penalties are derived
+          let
+            penalty = __misc !! 2
+            end = PA.fromAssocs maxBound one $ map (,penalty) [ (Z:.A:.U), (Z:.U:.A), (Z:.G:.U), (Z:.U:.G) ]
+            endE = PA.fromAssocs maxBound one [] -- TODO figure out the enthalpies
           let
             hairpin = Hairpin
               { _hairpinLength = hpl
               , _hairpinMM = mmh
               , _hairpinLookup = hexloop <> tetraloop <> triloop
+              , _hairpinPenalty = end -- NOTE same penalty as in exterior loops
 --              , _hairpinGGG = ddgDbg
 --              , _hairpinCslope = ddgDbg
 --              , _hairpinCintercept = ddgDbg
@@ -118,6 +125,8 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               }
             intloop = IntLoop
               { _intLoop1x1 = i11
+              , _intLoop1x2 = i21
+              , _intLoop2x2 = i22
               , _bulgeL = bul
               }
             multi = Multi
@@ -132,12 +141,14 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
                 { _mismatchExterior = mme
                 , _dangle5 = d5
                 , _dangle3 = d3
+                , _endPenalty = end
                 }
               }
             hairpinE = Hairpin
               { _hairpinLength = hplE
               , _hairpinMM = mmhE
               , _hairpinLookup = hexloopE <> tetraloopE <> triloopE
+              , _hairpinPenalty = endE
 --              , _hairpinGGG = ddgDbg
 --              , _hairpinCslope = ddgDbg
 --              , _hairpinCintercept = ddgDbg
@@ -146,6 +157,8 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               }
             intloopE = IntLoop
               { _intLoop1x1 = i11E
+              , _intLoop1x2 = i21E
+              , _intLoop2x2 = i22E
               , _bulgeL = bulE
               }
             multiE = Multi
@@ -160,6 +173,7 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
                 { _mismatchExterior = mmeE
                 , _dangle5 = d5E
                 , _dangle3 = d3E
+                , _endPenalty = endE
                 }
               }
           return (entropy,enthalpy)

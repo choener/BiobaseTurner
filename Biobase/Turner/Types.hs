@@ -56,7 +56,7 @@ data Hairpin vc ve c e = Hairpin
   , _hairpinLookup      :: !(M.Map (vc c) e)
     -- ^ Tabulated energies for short hairpins that do not follow the generic
     -- scheme.
---  , _hairpinAU          :: !(Dense ve (Z:.c:.c) e)
+  , _hairpinPenalty     :: !(Dense ve (Z:.c:.c) e)
   , _largeLoop          :: !e
 --  , _hairpinGGG         :: !e
 --  , _hairpinCslope      :: !e
@@ -71,11 +71,11 @@ makeLenses ''Hairpin
 
 hairpinE :: (VG.Vector ve a, VG.Vector we b) => Traversal (Hairpin vc ve c a) (Hairpin vc we c b) a b
 {-# Inlinable hairpinE #-}
-hairpinE f (Hairpin hl hmm lkup {- tAU -} llp) -- ggg sl ntr c3)
+hairpinE f (Hairpin hl hmm lkup penalty llp) -- ggg sl ntr c3)
   = Hairpin <$> (denseV.vectorTraverse) f hl
             <*> (denseV.vectorTraverse) f hmm
             <*> traverse f lkup
---            <*> (denseV.vectorTraverse) f tAU
+            <*> (denseV.vectorTraverse) f penalty
             <*> f llp
 --            <*> f ggg
 --            <*> f sl
@@ -125,8 +125,8 @@ stackE f (Stack s) = Stack <$> (denseV.vectorTraverse) f s
 
 data IntLoop ve c e = IntLoop
   { _intLoop1x1 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c) e)
---  , _intLoop1x2 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c:.c) e)
---  , _intLoop2x2 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c:.c:.c) e)
+  , _intLoop1x2 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c:.c) e)
+  , _intLoop2x2 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c:.c:.c) e)
 --  , _intLoop2x3 :: !(Dense ve (Z:.c:.c:.c:.c) e)
 --  , _intLoop1xn :: !(Dense ve (Z:.c:.c:.c:.c) e)
 --  , _intLoopMM  :: !(Dense ve (Z:.c:.c:.c:.c) e)
@@ -140,11 +140,11 @@ deriving instance (Show (ve e), Show c, Show e, Show (LimitType c)) => Show (Int
 
 intLoopE :: (VG.Vector ve a, VG.Vector we b) => Traversal (IntLoop ve c a) (IntLoop we c b) a b
 {-# Inlinable intLoopE #-}
-intLoopE f (IntLoop i11 {- i12 i22 i23 i1n imm ilen ininio imaxninio bau -} blen )
+intLoopE f (IntLoop i11 i12 i22 {- i23 i1n imm ilen ininio imaxninio bau -} blen )
   =   IntLoop
   <$> (denseV.vectorTraverse) f i11
---  <*> (denseV.vectorTraverse) f i12
---  <*> (denseV.vectorTraverse) f i22
+  <*> (denseV.vectorTraverse) f i12
+  <*> (denseV.vectorTraverse) f i22
 --  <*> (denseV.vectorTraverse) f i23
 --  <*> (denseV.vectorTraverse) f i1n
 --  <*> (denseV.vectorTraverse) f imm
@@ -185,17 +185,21 @@ data Exterior ve c e = Exterior
     -- ^ dangling nucleotide on the 5' side
   , _dangle3 :: !(Dense ve (Z:.c:.c:.c) e)
     -- ^ dangling nucleotide on the 3' side
+  , _endPenalty :: !(Dense ve (Z:.c:.c) e)
+    -- ^ flush end penalties. Defined for AU and GU pairs according to NNDB.
+    -- <https://rna.urmc.rochester.edu/NNDB/turner04/gu.html>
   } deriving (Generic)
 
 deriving instance (Show (ve e), Show c, Show e, Show (LimitType c)) => Show (Exterior ve c e)
 
 exteriorE :: (VG.Vector ve a, VG.Vector we b) => Traversal (Exterior ve c a) (Exterior we c b) a b
 {-# Inline exteriorE #-}
-exteriorE f (Exterior ext d5 d3)
+exteriorE f (Exterior ext d5 d3 end)
   = Exterior
   <$> (denseV.vectorTraverse) f ext
   <*> (denseV.vectorTraverse) f d5
   <*> (denseV.vectorTraverse) f d3
+  <*> (denseV.vectorTraverse) f end
 
 -- * The full model.
 
