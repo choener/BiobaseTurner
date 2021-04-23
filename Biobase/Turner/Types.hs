@@ -128,9 +128,9 @@ data IntLoop ve c e = IntLoop
   , _intLoop1x2 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c:.c) e)
   , _intLoop2x2 :: !(Dense ve (Z:.c:.c:.c:.c:.c:.c:.c:.c) e)
 --  , _intLoop2x3 :: !(Dense ve (Z:.c:.c:.c:.c) e)
---  , _intLoop1xn :: !(Dense ve (Z:.c:.c:.c:.c) e)
+  , _intLoop1xn :: !(Dense ve (Z:.c:.c:.c:.c) e)
 --  , _intLoopMM  :: !(Dense ve (Z:.c:.c:.c:.c) e)
---  , _intLoopL   :: !(Dense ve (Z:.Int) e)
+  , _intLoopL   :: !(Dense ve (Z:.Int) e)
 --  , _intLoopNinio :: !e
 --  , _intLoopMaxNinio :: !e
   , _bulgeL     :: !(Dense ve (Z:.Int) e)
@@ -140,15 +140,15 @@ deriving instance (Show (ve e), Show c, Show e, Show (LimitType c)) => Show (Int
 
 intLoopE :: (VG.Vector ve a, VG.Vector we b) => Traversal (IntLoop ve c a) (IntLoop we c b) a b
 {-# Inlinable intLoopE #-}
-intLoopE f (IntLoop i11 i12 i22 {- i23 i1n imm ilen ininio imaxninio bau -} blen )
+intLoopE f (IntLoop i11 i12 i22 {- i23 -} i1n {- imm -} ilen {- ininio imaxninio bau -} blen )
   =   IntLoop
   <$> (denseV.vectorTraverse) f i11
   <*> (denseV.vectorTraverse) f i12
   <*> (denseV.vectorTraverse) f i22
 --  <*> (denseV.vectorTraverse) f i23
---  <*> (denseV.vectorTraverse) f i1n
+  <*> (denseV.vectorTraverse) f i1n
 --  <*> (denseV.vectorTraverse) f imm
---  <*> (denseV.vectorTraverse) f ilen
+  <*> (denseV.vectorTraverse) f ilen
 --  <*> f ininio
 --  <*> f imaxninio
   <*> (denseV.vectorTraverse) f blen

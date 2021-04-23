@@ -109,7 +109,7 @@ eIntLoop2x2 IntLoop{..} lsO rsO rsI lsI lp1 lp2 rm2 rm1 =
 -- TODO Expand to a model of "unlimited" size, which will allow handing in inputs of any size.
 
 scoreInteriorLoop
-  :: ( Index c, VG.Vector vc c, VG.Vector ve e, Semiring e, Show (vc c), Ord e, Show c, Show e )
+  :: ( Index c, VG.Vector vc c, VG.Vector ve e, Semiring e, Show (vc c), Ord e, Show c, Show e, Read c, Eq c )
   => Stack ve c e
   -> IntLoop ve c e
   -> vc c -> c
@@ -139,12 +139,16 @@ scoreInteriorLoop stack@Stack{..} intloop@IntLoop{..} ls lsI rsI rs -- ls, lsInn
 --  || (lls>3 && lls<31 && rrs==1) = _bulgeAU!(Z:.lo0:.ro0)
 --                                 ⊗ _bulgeAU!(Z:.ri0:.li0)
 --                                 ⊗ _bulgeL!(Z:.max (lls-2) (rrs-2))
---  -- 1xn loop to the right
---  |  (lls==2 && rrs>3 && rrs<31)
---  || (rrs==2 && lls>3 && lls<31) = _intLoop1xn!(Z:.lo0:.ro0:.lo1:.ro1)
---                                 ⊗ _intLoop1xn!(Z:.ri0:.li0:.ri1:.li1)
---                                 ⊗ _intLoopL!(Z:.rrs-2+1)
---                                 ⊗ min _intLoopMaxNinio ((rrs-2) `nTimes` _intLoopNinio)
+  -- 1xn loop to the right
+  |  (short==1 && long>2 && long<31) = let o = _intLoop1xn!(Z:.lsO:.rsO:.lp1:.rm1)
+                                           i = _intLoop1xn!(Z:.rsI:.lsI:.rp1:.lm1)
+                                           l = _intLoopL!(Z:.long + short)
+                                           n = one -- min _intLoopMaxNinio ((rrs-2) `nTimes` _intLoopNinio)
+                                           e = o ⊗ i ⊗ l -- ⊗ n
+                                       in  e
+                                      -- if (lsO == read "G" && rsO == read "C" && lsI == read "C" && rsI == read "G")
+                                      --     then traceShow (lsO,rsO,lp1,rm1,rsI,lsI,rp1,lm1,o,i,l,e) e
+                                      --     else e
 --  -- generic interior loops
 --  | lls>3, rrs>3, lls+rrs>8, lls+rrs<34 = _intLoopMM!(Z:.lo0:.ro0:.lo1:.ro1)
 --                                        ⊗ _intLoopMM!(Z:.ri0:.li0:.ri1:.li1)
@@ -165,6 +169,10 @@ scoreInteriorLoop stack@Stack{..} intloop@IntLoop{..} ls lsI rsI rs -- ls, lsInn
     lp2 = VG.unsafeIndex ls 2
     rm1 = VG.unsafeIndex rs (rsLen-2) -- second to last!
     rm2 = VG.unsafeIndex rs (rsLen-3)
+    --
+    lm1 = VG.unsafeIndex ls (lsLen-1) -- note that this is the last unpaired on the ls side
+    rp1 = VG.unsafeIndex rs 0 -- note that this is the "last" unpaired on the rs side
+
 --    -- define nucleotides for the left @ls@ and right @rs@ input string. @o@ defines the outside
 --    -- character, leftmost in @l@, rightmost in @r@. The index is the offset from this character.
 --    -- Hence @lo0@ is the leftmost character of the left string, while @ro0@ the rightmost character

@@ -127,6 +127,8 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               { _intLoop1x1 = i11
               , _intLoop1x2 = i21
               , _intLoop2x2 = i22
+              , _intLoop1xn = mmi1n
+              , _intLoopL = int
               , _bulgeL = bul
               }
             multi = Multi
@@ -159,6 +161,8 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               { _intLoop1x1 = i11E
               , _intLoop1x2 = i21E
               , _intLoop2x2 = i22E
+              , _intLoop1xn = mmi1nE
+              , _intLoopL = intE
               , _bulgeL = bulE
               }
             multiE = Multi
