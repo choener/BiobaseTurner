@@ -128,6 +128,7 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               , _intLoop1x2 = i21
               , _intLoop2x2 = i22
               , _intLoop1xn = mmi1n
+              , _intLoopMM  = mmi
               , _intLoopL = int
               , _bulgeL = bul
               }
@@ -162,6 +163,7 @@ pVienna = runP $ v2Header *> spaces *> energiesAndEnthalpies <* v2End <* eof
               , _intLoop1x2 = i21E
               , _intLoop2x2 = i22E
               , _intLoop1xn = mmi1nE
+              , _intLoopMM = mmiE
               , _intLoopL = intE
               , _bulgeL = bulE
               }

@@ -140,9 +140,9 @@ scoreInteriorLoop stack@Stack{..} intloop@IntLoop{..} ls lsI rsI rs -- ls, lsInn
 --                                 ⊗ _bulgeAU!(Z:.ri0:.li0)
 --                                 ⊗ _bulgeL!(Z:.max (lls-2) (rrs-2))
   -- 1xn loop to the right
-  |  (short==1 && long>2 && long<31) = let o = _intLoop1xn!(Z:.lsO:.rsO:.lp1:.rm1)
+  |  (short==2 && long>3 && long<31) = let o = _intLoop1xn!(Z:.lsO:.rsO:.lp1:.rm1)
                                            i = _intLoop1xn!(Z:.rsI:.lsI:.rp1:.lm1)
-                                           l = _intLoopL!(Z:.long + short)
+                                           l = _intLoopL!(Z:.long + short - 2)
                                            n = one -- min _intLoopMaxNinio ((rrs-2) `nTimes` _intLoopNinio)
                                            e = o ⊗ i ⊗ l -- ⊗ n
                                        in  e
@@ -150,10 +150,12 @@ scoreInteriorLoop stack@Stack{..} intloop@IntLoop{..} ls lsI rsI rs -- ls, lsInn
                                       --     then traceShow (lsO,rsO,lp1,rm1,rsI,lsI,rp1,lm1,o,i,l,e) e
                                       --     else e
 --  -- generic interior loops
---  | lls>3, rrs>3, lls+rrs>8, lls+rrs<34 = _intLoopMM!(Z:.lo0:.ro0:.lo1:.ro1)
---                                        ⊗ _intLoopMM!(Z:.ri0:.li0:.ri1:.li1)
---                                        ⊗ _intLoopL!(Z:.lls+rrs-4)
---                                        ⊗ min _intLoopMaxNinio (abs (lls-rrs) `nTimes` _intLoopNinio)
+  | short>3, lsLen+rsLen<34 = let o = _intLoopMM!(Z:.lsO:.rsO:.lp1:.rm1)
+                                  i = _intLoopMM!(Z:.rsI:.lsI:.rp1:.lm1)
+                                  l = _intLoopL!(Z:.long + short - 2)
+                                  n = one -- min _intLoopMaxNinio (abs (lls-rrs) `nTimes` _intLoopNinio)
+                                  e = o ⊗ i ⊗ l ⊗ n
+                              in  e
 --  -- for every other loop, we do not have energy parameters
 --  | otherwise = trace (printf "scoreInteriorLoop too large: ls:%s rs:%s\n" (show ls) (show rs)) zero
   | otherwise = zero
