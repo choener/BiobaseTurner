@@ -134,7 +134,7 @@ scoreInteriorLoop stack@Stack{..} intloop@IntLoop{..} ls lsI rsI rs -- ls, lsInn
 --  | min lls rrs==3, max lls rrs==4 = _intLoop2x3!(Z:.lo0:.ro0:.lo1:.ro1)
 --                                   ⊗ _intLoop2x3!(Z:.ri0:.li0:.ri1:.li1)
 --                                   ⊗ _intLoopL!(Z:.5) ⊗ _intLoopNinio
---  -- bulge to the right
+  -- bulges to the right or left
 --  |  (lls==1 && rrs>3 && rrs<31)
 --  || (lls>3 && lls<31 && rrs==1) = _bulgeAU!(Z:.lo0:.ro0)
 --                                 ⊗ _bulgeAU!(Z:.ri0:.li0)
