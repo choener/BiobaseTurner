@@ -8,6 +8,10 @@ jobs:
         ghc: ['8.8', '8.10', '9.0']
         cabal: ['3.2', '3.4']
         os: [ubuntu-latest]
+        exclude:
+          # GHC 8.8+ only works with cabal v3+
+          - ghc: 9.0
+            cabal: 3.2
     name: Haskell GHC ${{ matrix.ghc }}, cabal ${{ matrix.cabal }}
     steps:
       - uses: actions/checkout@v2
