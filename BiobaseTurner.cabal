@@ -5,10 +5,10 @@ author:         Christian Hoener zu Siederdissen
 maintainer:     choener@bioinf.uni-leipzig.de
 Homepage:       https://github.com/choener/BiobaseTurner
 bug-reports:    https://github.com/choener/BiobaseTurner/issues
-copyright:      Christian Hoener zu Siederdissen, 2010-2020
+copyright:      Christian Hoener zu Siederdissen, 2010-2021
 category:       Bioinformatics
 synopsis:       The Turner RNA energy model
-license:        GPL-3
+license:        GPL-3.0-or-later
 license-file:   LICENSE
 build-type:     Simple
 stability:      experimental
