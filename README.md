@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/choener/BiobaseTurner.svg?branch=master)](https://travis-ci.org/choener/BiobaseTurner)
+![github action: master](https://github.com/choener/BiobaseTurner/actions/workflows/action.yml/badge.svg)
 
 # BiobaseTurner
 

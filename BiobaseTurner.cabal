@@ -1,3 +1,4 @@
+cabal-version:  2.2
 name:           BiobaseTurner
 version:        0.3.2.1
 author:         Christian Hoener zu Siederdissen
@@ -11,8 +12,7 @@ license:        GPL-3
 license-file:   LICENSE
 build-type:     Simple
 stability:      experimental
-cabal-version:  >= 1.10.0
-tested-with:    GHC == 8.10.2
+tested-with:    GHC == 8.8, GHC == 8.10, GHC == 9.0
 description:
                 A data structure and energy calculation functions for Mathews / Turner RNA and DNA
                 energy parameters.
@@ -60,7 +60,7 @@ library
                --
                , BiobaseTypes           == 0.1.3.*
                , BiobaseXNA             == 0.11.0.*
-               , PrimitiveArray         == 0.9.0.*
+               , PrimitiveArray         == 0.10.1.*
                , SciBaseTypes           == 0.0.0.*
   exposed-modules:
     Biobase.Turner
