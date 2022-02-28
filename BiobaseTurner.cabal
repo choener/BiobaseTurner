@@ -51,6 +51,7 @@ library
                , filepath
                , fused-effects          >= 1.0
                , lens                   >= 4
+               , parsers                >= 0.12
                , primitive              >= 0.5
                , split                  >= 0.2
                , text                   >= 1.0
@@ -58,10 +59,10 @@ library
                , vector                 >= 0.10
                , vector-th-unbox        >= 0.2
                --
-               , BiobaseTypes           == 0.2.0.*
-               , BiobaseXNA             == 0.11.0.*
-               , PrimitiveArray         == 0.10.1.*
-               , SciBaseTypes           == 0.1.0.*
+               , BiobaseTypes           == 0.2.1.*
+               , BiobaseXNA             == 0.11.1.*
+               , PrimitiveArray         == 0.10.2.*
+               , SciBaseTypes           == 0.1.1.*
   exposed-modules:
     Biobase.Turner
     Biobase.Turner.Default.RNA2004
@@ -74,6 +75,7 @@ library
   default-extensions: BangPatterns
                     , DeriveGeneric
                     , DeriveDataTypeable
+                    , DerivingStrategies
                     , FlexibleContexts
                     , FlexibleInstances
                     , GADTs
@@ -85,6 +87,7 @@ library
                     , PatternGuards
                     , RankNTypes
                     , RecordWildCards
+                    , ScopedTypeVariables
                     , StandaloneDeriving
                     , TemplateHaskell
                     , TupleSections
